@@ -11,7 +11,6 @@ bitflags! {
 }
 
 /// Uart Driver implementation, that does not rely on atomic operations
-///
 pub struct Uart16550 {
     initialized: bool,
     base_address: *mut u8,

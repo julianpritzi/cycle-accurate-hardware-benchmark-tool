@@ -1,14 +1,12 @@
 #![no_std]
 #![no_main]
 
-use core::panic::PanicInfo;
-
-use riscv_rt::entry;
-
 mod modules;
 mod platform;
 
+use core::panic::PanicInfo;
 use platform::Platform;
+use riscv_rt::entry;
 
 #[entry]
 fn main() -> ! {
