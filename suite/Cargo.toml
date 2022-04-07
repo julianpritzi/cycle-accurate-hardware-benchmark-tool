@@ -1,0 +1,8 @@
+[package]
+name = "suite"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+riscv-rt = "^0.8.1"
+riscv = "^0.7.0"
