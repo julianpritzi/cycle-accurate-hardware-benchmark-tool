@@ -5,7 +5,7 @@ let
   rustpkgs = import <nixpkgs> { overlays = [ moz_overlay ]; };
 
   rustToolchain = (rustpkgs.rustChannelOf { rustToolchain = ./rust-toolchain; }).rust.override {
-    targets = [ "riscv32imac-unknown-none-elf" ];
+    targets = [ "riscv32imc-unknown-none-elf" ];
     extensions = [
       "rust-src"
       "llvm-tools-preview"
