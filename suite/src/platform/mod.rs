@@ -9,7 +9,10 @@ pub fn current() -> impl Platform {
 }
 
 pub trait Platform {
-    fn get_communication_module(&self) -> Option<&'static mut dyn CommunicationModule>;
+    /// # Safety
+    ///  - this module should only be used through the macros provided by `runtime.rs`
+    ///  - calling the function more than once might invalidate previous references
+    unsafe fn get_communication_module(&self) -> &'static mut dyn CommunicationModule;
 
     fn suspend(&self, code: u32) -> !;
 }

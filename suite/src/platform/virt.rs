@@ -9,10 +9,14 @@ static mut UART0: uart16550::Uart16550 =
 pub struct VirtPlatform;
 
 impl Platform for VirtPlatform {
-    fn get_communication_module(
+    unsafe fn get_communication_module(
         &self,
-    ) -> Option<&'static mut dyn crate::modules::CommunicationModule> {
-        unsafe { Some(&mut UART0) }
+    ) -> &'static mut dyn crate::modules::CommunicationModule {
+        // Safety:
+        // there possibly exist multiple mutable references to UART0
+        // but the responsibility to ensure correctness is delegated
+        // to the caller of this function
+        &mut UART0
     }
 
     fn suspend(&self, code: u32) -> ! {
