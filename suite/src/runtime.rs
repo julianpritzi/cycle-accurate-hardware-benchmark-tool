@@ -15,24 +15,10 @@ pub unsafe fn init() -> Result<(), &'static str> {
     comm.init()
 }
 
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    unsafe {
-        // Safety: invalidating previous references is ok, since we are in a unrecoverable state
-        let comm = platform::current().get_communication_module();
-        if comm.init().is_ok() {
-            let _ = writeln!(comm, "! {}", info);
-        }
-    }
-
-    platform::current().suspend(101)
-}
-
 // Safety of calling get_communication_module() inside the macros:
 // invalidating previous references is ok,
 // because all macros reference the module only in a closed scope
 // and the architecture is assumed to be on a single core
-
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => (unsafe {
@@ -51,4 +37,65 @@ macro_rules! println {
         use crate::platform::Platform;
         writeln!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
     });
+}
+
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    unsafe {
+        // Safety: invalidating previous references is ok, since we are in a unrecoverable state
+        let comm = platform::current().get_communication_module();
+        if comm.init().is_ok() {
+            let _ = writeln!(comm, "! {}", info);
+        }
+    }
+
+    platform::current().suspend(101)
+}
+
+#[cfg(test)]
+pub trait TestFunction {
+    fn test_run(&self) -> ();
+}
+
+#[cfg(test)]
+impl<T> TestFunction for T
+where
+    T: Fn(),
+{
+    fn test_run(&self) {
+        print!("{}... ", core::any::type_name::<T>());
+        self();
+        println!("[ok]");
+    }
+}
+
+#[cfg(test)]
+pub fn test_runner(tests: &[&dyn TestFunction]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test.test_run();
+    }
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    unsafe {
+        let comm = platform::current().get_communication_module();
+        if comm.init().is_ok() {
+            let _ = writeln!(comm, "[failed]");
+            let _ = writeln!(comm, "Error: {}", info);
+        }
+    }
+
+    platform::current().suspend(101)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test_case]
+    fn tests_are_working() {
+        assert_eq!(1, 1);
+    }
 }
