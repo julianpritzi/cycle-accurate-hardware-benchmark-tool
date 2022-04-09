@@ -36,6 +36,7 @@ fn panic(info: &PanicInfo) -> ! {
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => (unsafe {
+        use crate::platform::Platform;
         write!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
     });
 }
@@ -43,9 +44,11 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
     () => (unsafe {
+        use crate::platform::Platform;
         writeln!($crate::platform::current().get_communication_module()).unwrap();
     });
     ($($arg:tt)*) => (unsafe {
+        use crate::platform::Platform;
         writeln!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
     });
 }

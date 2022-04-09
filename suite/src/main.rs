@@ -3,6 +3,7 @@
 
 mod modules;
 mod platform;
+#[macro_use]
 mod runtime;
 mod test;
 
