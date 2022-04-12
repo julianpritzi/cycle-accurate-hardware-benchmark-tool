@@ -87,6 +87,18 @@ macro_rules! println {
     });
 }
 
+#[macro_export]
+macro_rules! readln {
+    () => {
+        unsafe {
+            use crate::platform::Platform;
+            $crate::platform::current()
+                .get_communication_module()
+                .read_line()
+        }
+    };
+}
+
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {

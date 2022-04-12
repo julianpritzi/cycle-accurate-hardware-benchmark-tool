@@ -1,6 +1,6 @@
 use core::fmt::Write;
 
-use crate::modules::{CommunicationModule, Module};
+use crate::modules::{ByteRead, CommunicationModule, Module};
 use bitflags::bitflags;
 
 bitflags! {
@@ -27,7 +27,7 @@ impl Uart16550 {
         }
     }
 
-    unsafe fn status(&mut self) -> StatusFlags {
+    unsafe fn status(&self) -> StatusFlags {
         StatusFlags::from_bits_truncate(*self.base_address.add(5))
     }
 
@@ -83,6 +83,18 @@ impl Write for Uart16550 {
             }
 
             Ok(())
+        }
+    }
+}
+
+impl ByteRead for Uart16550 {
+    fn read_byte(&self) -> Option<u8> {
+        unsafe {
+            if self.status().contains(StatusFlags::INPUT_FULL) {
+                Some(self.base_address.add(0).read_volatile())
+            } else {
+                None
+            }
         }
     }
 }

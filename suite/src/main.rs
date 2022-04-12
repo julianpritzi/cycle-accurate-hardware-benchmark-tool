@@ -23,6 +23,14 @@ fn main() {
     for sub_str in s.split_whitespace() {
         println!("{}", sub_str)
     }
+
+    loop {
+        let msg = readln!();
+        println!("Read: {}", msg);
+        if msg.eq_ignore_ascii_case("exit") {
+            break;
+        }
+    }
 }
 
 #[entry]
