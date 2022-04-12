@@ -1,7 +1,5 @@
 use alloc::string::String;
 
-use crate::println;
-
 /// Generic module trait, implemented by all modules
 pub trait Module {
     /// Initialize module
