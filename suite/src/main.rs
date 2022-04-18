@@ -5,6 +5,7 @@
 #![test_runner(crate::runtime::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+mod cmd;
 mod modules;
 mod platform;
 #[macro_use]
@@ -15,7 +16,15 @@ use riscv_rt::entry;
 
 extern crate alloc;
 
-fn main() {}
+fn main() {
+    loop {
+        match cmd::run_cmd(readln!().split(' ')) {
+            Ok(Some(reply)) => println!("{}", reply),
+            Ok(None) => {}
+            Err(reply) => println!("! {}", reply),
+        }
+    }
+}
 
 #[entry]
 fn entry() -> ! {
