@@ -1,7 +1,5 @@
-use std::{ffi::OsString, path::PathBuf};
-
 use clap::Parser;
-mod lib;
+use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Parser)]
 struct Args {
@@ -19,10 +17,10 @@ fn main() {
     let args = Args::parse();
 
     for file in args.files {
-        lib::benchmark_file(&args.tty, file);
+        cli::benchmark_file(&args.tty, file);
     }
 
     if args.raw {
-        lib::create_raw_console(&args.tty);
+        cli::create_raw_console(&args.tty);
     }
 }
