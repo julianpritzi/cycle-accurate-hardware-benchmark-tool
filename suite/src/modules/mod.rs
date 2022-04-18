@@ -11,6 +11,7 @@ pub trait Module {
     fn initialized(&self) -> bool;
 }
 
+// Module for reading bytes
 pub trait ByteRead {
     fn read_byte(&self) -> Option<u8>;
 

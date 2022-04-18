@@ -1,4 +1,4 @@
-//! Contains functions and macros for providing a runtime environment to the bechmarking suite
+//! Contains functions and macros for providing a runtime environment to the benchmarking suite
 use core::{alloc::GlobalAlloc, cell::RefCell, panic::PanicInfo, ptr::NonNull};
 
 use linked_list_allocator::Heap;
@@ -161,11 +161,11 @@ mod tests {
 
     #[test_case]
     fn basic_allocations_are_working() {
-        use alloc::collections::vec_deque::VecDeque;
+        use alloc::vec;
 
-        let mut vector = VecDeque::new();
+        let mut vector = vec![];
         for i in 0..10 {
-            vector.push_back(i);
+            vector.push(i);
         }
 
         assert_eq!(vector.len(), 10)

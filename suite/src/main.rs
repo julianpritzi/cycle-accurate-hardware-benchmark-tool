@@ -10,28 +10,12 @@ mod platform;
 #[macro_use]
 mod runtime;
 
-use alloc::string::String;
 use platform::Platform;
 use riscv_rt::entry;
 
 extern crate alloc;
 
-fn main() {
-    println!("Hello World!");
-
-    let s = String::from("Hello allocated World!");
-    for sub_str in s.split_whitespace() {
-        println!("{}", sub_str)
-    }
-
-    loop {
-        let msg = readln!();
-        println!("Read: {}", msg);
-        if msg.eq_ignore_ascii_case("exit") {
-            break;
-        }
-    }
-}
+fn main() {}
 
 #[entry]
 fn entry() -> ! {
