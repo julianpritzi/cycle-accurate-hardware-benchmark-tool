@@ -5,6 +5,8 @@ use alloc::string::String;
 use crate::platform::{self, Platform};
 
 /// Executes a command
+///
+/// The returned String does not contain any new lines
 pub fn run_cmd(mut cmd: core::str::Split<char>) -> Result<Option<String>, CmdError> {
     match cmd.next() {
         Some("suspend") => platform::current().suspend(cmd.next().unwrap_or("0").parse()?),

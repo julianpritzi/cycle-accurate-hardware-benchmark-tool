@@ -20,7 +20,7 @@ fn main() {
     loop {
         match cmd::run_cmd(readln!().split(' ')) {
             Ok(Some(reply)) => println!("{}", reply),
-            Ok(None) => {}
+            Ok(None) => println!(),
             Err(reply) => println!("! {}", reply),
         }
     }
