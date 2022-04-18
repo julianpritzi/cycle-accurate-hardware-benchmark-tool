@@ -19,6 +19,7 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [
     git
+    bash
     qemu
     rustToolchain
   ];
