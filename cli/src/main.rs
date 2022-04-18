@@ -1,12 +1,28 @@
-use std::{env, path::PathBuf, process::Command};
+use std::{ffi::OsString, path::PathBuf};
+
+use clap::Parser;
+mod lib;
+
+#[derive(Parser)]
+struct Args {
+    #[clap(short, long)]
+    tty: OsString,
+
+    #[clap(short, long)]
+    raw: bool,
+
+    #[clap(short, long)]
+    files: Vec<PathBuf>,
+}
 
 fn main() {
-    let app = env::args()
-        .next()
-        .expect("Runner-Error: No application to run.");
+    let args = Args::parse();
 
-    let project_folder = PathBuf::from(file!());
-    let f = project_folder.parent().unwrap().parent();
+    for file in args.files {
+        lib::benchmark_file(&args.tty, file);
+    }
 
-    println!("{f:?}")
+    if args.raw {
+        lib::create_raw_console(&args.tty);
+    }
 }
