@@ -47,8 +47,7 @@ impl Module for Uart16550 {
         // Enable FIFO
         self.base_address.add(2).write_volatile(1 << 0);
 
-        // TODO: calculate divisor (BAUD)
-        let divisor: u16 = 600;
+        let divisor: u16 = 9600;
         let divisor_l: u8 = (divisor & 0xff).try_into().unwrap();
         let divisor_h: u8 = (divisor >> 8).try_into().unwrap();
 
