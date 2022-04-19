@@ -6,7 +6,7 @@ use std::{
 
 use tty::{RawTerminal, SerialConnection};
 
-mod tty;
+pub mod tty;
 
 pub fn create_raw_console(tty: &OsString) {
     let mut suite = SerialConnection::new(tty).expect("Failed to connect to serial");
@@ -21,6 +21,6 @@ pub fn create_raw_console(tty: &OsString) {
     }
 }
 
-pub fn benchmark_file(tty: &OsString, file: PathBuf) {
+pub fn benchmark_file(_tty: &OsString, _file: PathBuf) {
     todo!()
 }
