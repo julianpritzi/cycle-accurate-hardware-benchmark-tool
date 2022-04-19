@@ -4,20 +4,22 @@ use std::{
     io::{Error, ErrorKind, Read},
 };
 
-pub struct SerialTerminal {
+type Line = Result<String, Error>;
+
+pub struct SerialConnection {
     port: serial::SystemPort,
 }
 
-impl SerialTerminal {
-    pub fn new(tty: &OsString) -> Result<SerialTerminal, serial::Error> {
-        let term = SerialTerminal {
+impl SerialConnection {
+    pub fn new(tty: &OsString) -> Result<SerialConnection, serial::Error> {
+        let term = SerialConnection {
             port: serial::open(tty)?,
         };
 
         Ok(term)
     }
 
-    pub fn read_line(&mut self) -> Result<String, Error> {
+    pub fn read_line(&mut self) -> Line {
         let mut buf = [0];
         let mut msg = String::new();
 
@@ -36,9 +38,53 @@ impl SerialTerminal {
     }
 }
 
-impl Write for SerialTerminal {
+impl Write for SerialConnection {
     fn write_str(&mut self, s: &str) -> std::fmt::Result {
         std::io::Write::write_all(&mut self.port, s.as_bytes()).unwrap();
         Ok(())
+    }
+}
+
+/// Simple wrapper for interacting with the benchmarking suite,
+/// uses a serial connection and an iterator of input lines
+/// to send them and retrieve the response
+pub struct RawTerminal<'a> {
+    connection: &'a mut SerialConnection,
+    input_lines: Box<dyn Iterator<Item = Line>>,
+    done: bool,
+}
+
+impl RawTerminal<'_> {
+    pub fn new<'a, 'b>(
+        connection: &'a mut SerialConnection,
+        input_lines: Box<dyn Iterator<Item = Line>>,
+    ) -> RawTerminal<'a> {
+        RawTerminal {
+            connection,
+            input_lines,
+            done: false,
+        }
+    }
+}
+
+impl Iterator for RawTerminal<'_> {
+    type Item = Line;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+        match self.input_lines.next() {
+            Some(Ok(input_line)) => {
+                writeln!(self.connection, "{}", input_line).expect("Writing to serial failed");
+
+                let ret = self.connection.read_line();
+
+                self.done = ret.is_err();
+
+                Some(ret)
+            }
+            x => x,
+        }
     }
 }

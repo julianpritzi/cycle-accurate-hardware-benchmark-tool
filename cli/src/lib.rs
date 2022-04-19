@@ -1,27 +1,22 @@
 use std::{
     ffi::OsString,
-    fmt::Write,
     io::{self, BufRead},
     path::PathBuf,
 };
 
-use tty::SerialTerminal;
+use tty::{RawTerminal, SerialConnection};
 
 mod tty;
 
 pub fn create_raw_console(tty: &OsString) {
-    let mut suite = SerialTerminal::new(tty).expect("Failed to connect to serial");
+    let mut suite = SerialConnection::new(tty).expect("Failed to connect to serial");
 
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        writeln!(suite, "{}", line.unwrap()).expect("Writing to serial failed");
+    let raw_term = RawTerminal::new(&mut suite, Box::new(io::stdin().lock().lines()));
 
-        match suite.read_line() {
-            Ok(reply) => println!("{}", reply),
-            Err(err) => {
-                eprintln!("! {err}");
-                break;
-            }
+    for line in raw_term {
+        match line {
+            Ok(reply) => println!("{reply}"),
+            Err(err) => eprintln!("! {err}"),
         }
     }
 }
