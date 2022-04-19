@@ -9,7 +9,7 @@ struct Args {
     #[clap(short, long)]
     raw: bool,
 
-    #[clap(short, long)]
+    #[clap(short, long, multiple_values = true)]
     files: Vec<PathBuf>,
 }
 
