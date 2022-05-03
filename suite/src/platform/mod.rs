@@ -1,12 +1,20 @@
 use crate::modules::CommunicationModule;
 
-#[cfg(feature = "platform_virt")]
+#[cfg(feature = "platform_verilator_earlgrey")]
+mod earlgrey;
+#[cfg(feature = "platform_qemu_virt")]
 mod virt;
 
 /// Returns the platform the suite was compiled for.
 pub fn current() -> impl Platform {
-    #[cfg(feature = "platform_virt")]
-    virt::VirtPlatform
+    #[cfg(feature = "platform_qemu_virt")]
+    {
+        virt::VirtPlatform
+    }
+    #[cfg(feature = "platform_verilator_earlgrey")]
+    {
+        earlgrey::EarlGreyPlatform
+    }
 }
 
 /// A platform represents the underlying layer on which the suite runs.

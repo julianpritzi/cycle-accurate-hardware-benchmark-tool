@@ -1,6 +1,6 @@
 use core::fmt::Write;
 
-use crate::modules::{ByteRead, CommunicationModule, Module};
+use crate::modules::{ByteRead, Module};
 use bitflags::bitflags;
 
 bitflags! {
@@ -110,5 +110,3 @@ impl ByteRead for Uart16550 {
         }
     }
 }
-
-impl CommunicationModule for Uart16550 {}

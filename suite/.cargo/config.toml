@@ -4,17 +4,13 @@ rustflags = [
   "-C", "link-arg=-Tlink.x",
 ]
 
-runner = [ 
-  "qemu-system-riscv32",
-  "-M", "virt",
-  "-cpu", "rv32",
-  "-smp", "1",
-  "-m", "64K",
-  "-display", "none",
-  "-bios", "none",
-  "-serial", "stdio",
-  "-kernel", # Cargo will pass the path to the file as last argument
-]
+runner = ".cargo/runner.sh"
 
 [build]
 target = "riscv32imc-unknown-none-elf"
+
+[alias]
+run-qemu = "run --no-default-features --features platform_qemu_virt -- -q"
+test-qemu = "test --no-default-features --features platform_qemu_virt -- -q"
+run-verilator = "run --no-default-features --features platform_verilator_earlgrey -- -v"
+test-verilator = "test --no-default-features --features platform_verilator_earlgrey -- -v"

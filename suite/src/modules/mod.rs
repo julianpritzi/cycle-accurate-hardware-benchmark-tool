@@ -49,3 +49,5 @@ pub trait ByteRead {
 
 /// Module for communicating with the Benchmarking-CLI
 pub trait CommunicationModule: core::fmt::Write + Module + ByteRead {}
+
+impl<T> CommunicationModule for T where T: core::fmt::Write + Module + ByteRead {}

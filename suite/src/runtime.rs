@@ -86,10 +86,12 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
     () => (unsafe {
+        #[allow(unused_imports)]
         use crate::platform::Platform;
         writeln!($crate::platform::current().get_communication_module()).unwrap();
     });
     ($($arg:tt)*) => (unsafe {
+        #[allow(unused_imports)]
         use crate::platform::Platform;
         writeln!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
     });
@@ -100,6 +102,7 @@ macro_rules! println {
 macro_rules! readln {
     () => {
         unsafe {
+            #[allow(unused_imports)]
             use crate::platform::Platform;
             $crate::platform::current()
                 .get_communication_module()

@@ -15,7 +15,9 @@ use riscv_rt::entry;
 
 extern crate alloc;
 
-fn main() {}
+fn main() {
+    println!("Hello Opentitan World!");
+}
 
 /// First function that is called once riscv_rt finished setting up the rust runtime.
 /// (initialize stack pointer, zero bss, initialize data, ...)
