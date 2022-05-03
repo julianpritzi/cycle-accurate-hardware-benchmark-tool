@@ -1,4 +1,6 @@
-# memory layout of qemu emulator
+/* 
+*  memory layout of the qemu virt machine
+*/
 
 MEMORY
 {

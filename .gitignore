@@ -1,1 +1,4 @@
 target/
+*.log
+gpio0-read
+gpio0-write
