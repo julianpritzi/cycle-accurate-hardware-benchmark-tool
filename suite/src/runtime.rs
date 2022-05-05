@@ -1,5 +1,10 @@
 //! Contains functions and macros for providing a runtime environment to the benchmarking suite
-use core::{alloc::GlobalAlloc, cell::RefCell, panic::PanicInfo, ptr::NonNull};
+use core::{
+    alloc::GlobalAlloc,
+    cell::RefCell,
+    panic::PanicInfo,
+    ptr::{self, NonNull},
+};
 
 use linked_list_allocator::Heap;
 
@@ -30,7 +35,15 @@ pub unsafe fn init() -> Result<(), &'static str> {
     // This should be the first time the communication module is accessed,
     // invalidating previous references is ok
     let comm = platform::current().get_communication_module();
-    comm.init()
+    comm.init()?;
+
+    if let Some(mut module) = platform::current().get_sha256_module() {
+        if !module.initialized() {
+            module.init()?;
+        }
+    }
+
+    Ok(())
 }
 
 /// Since the architecture is assumed to be on a single core and without atomic instructions
@@ -56,7 +69,7 @@ unsafe impl GlobalAlloc for CustomHeap {
             .borrow_mut()
             .allocate_first_fit(layout)
             .ok()
-            .map_or(0 as *mut u8, |addr| addr.as_ptr())
+            .map_or(ptr::null_mut::<u8>(), |addr| addr.as_ptr())
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: core::alloc::Layout) {
@@ -126,6 +139,21 @@ fn panic(info: &PanicInfo) -> ! {
     platform::current().suspend(101)
 }
 
+/// Signal to the testing suite that the current test is skipped
+#[cfg(test)]
+#[macro_export]
+macro_rules! mark_test_as_skipped {
+    () => {
+        unsafe {
+            crate::runtime::TEST_RESULT_SKIPPED = true;
+        }
+    };
+}
+
+/// Used by the `mark_test_as_skipped!` macro to signal that the current test was skipped
+#[cfg(test)]
+pub static mut TEST_RESULT_SKIPPED: bool = false;
+
 /// Helper trait to allow automatically outputting text before and after a test function is run.
 #[cfg(test)]
 pub trait TestFunction {
@@ -139,8 +167,14 @@ where
 {
     fn test_run(&self) {
         print!("{}... ", core::any::type_name::<T>());
+
+        unsafe { TEST_RESULT_SKIPPED = false };
         self();
-        println!("[ok]");
+        if unsafe { TEST_RESULT_SKIPPED } {
+            println!("[skipped]");
+        } else {
+            println!("[ok]")
+        }
     }
 }
 

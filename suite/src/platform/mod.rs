@@ -1,4 +1,4 @@
-use crate::modules::CommunicationModule;
+use crate::modules::{CommunicationModule, ModuleRef, SHA256Module};
 
 #[cfg(feature = "platform_verilator_earlgrey")]
 mod earlgrey;
@@ -29,6 +29,11 @@ pub trait Platform {
     ///  - this module should only be used through the macros provided by `runtime.rs`
     ///  - calling the function more than once might invalidate previous references
     unsafe fn get_communication_module(&self) -> &'static mut dyn CommunicationModule;
+
+    /// Returns the platforms SHA256 module if one is present.
+    fn get_sha256_module(&self) -> Option<ModuleRef<dyn SHA256Module>> {
+        None
+    }
 
     /// Signals the platform that the suite finished executing.
     /// What should happen when this function is called is defined by the platform.

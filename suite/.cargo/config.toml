@@ -11,6 +11,10 @@ target = "riscv32imc-unknown-none-elf"
 
 [alias]
 run-qemu = "run --no-default-features --features platform_qemu_virt -- -q"
+run-qemu-opt = "run --no-default-features --features platform_qemu_virt --release -- -q"
 test-qemu = "test --no-default-features --features platform_qemu_virt -- -q"
+test-qemu-opt = "test --no-default-features --features platform_qemu_virt --release -- -q"
 run-verilator = "run --no-default-features --features platform_verilator_earlgrey -- -v"
+run-verilator-opt = "run --no-default-features --features platform_verilator_earlgrey --release -- -v"
 test-verilator = "test --no-default-features --features platform_verilator_earlgrey -- -v"
+test-verilator-opt = "test --no-default-features --features platform_verilator_earlgrey --release -- -v"
