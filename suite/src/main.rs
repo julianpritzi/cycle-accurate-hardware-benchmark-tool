@@ -9,6 +9,7 @@ mod modules;
 mod platform;
 #[macro_use]
 mod runtime;
+mod benchmark;
 
 use platform::Platform;
 use riscv_rt::entry;
@@ -17,6 +18,8 @@ extern crate alloc;
 
 fn main() {
     println!("Hello Opentitan World!");
+
+    benchmark::examples::sha256_benchmark(8);
 }
 
 /// First function that is called once riscv_rt finished setting up the rust runtime.

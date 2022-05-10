@@ -11,6 +11,7 @@ let
       "llvm-tools-preview"
       "rust-analyzer-preview"
       "rustfmt-preview"
+      "clippy-preview"
     ];
   };
 in

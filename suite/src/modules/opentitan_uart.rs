@@ -29,17 +29,17 @@ bitflags! {
     }
 }
 
-// Offset of the control register
+/// Offset of the control register
 const UART_CTRL_OFFSET: usize = 0x10;
-// Offset of the status register
+/// Offset of the status register
 const UART_STATUS_OFFSET: usize = 0x14;
-// Offset of the read data register
+/// Offset of the read data register
 const UART_RDATA_OFFSET: usize = 0x18;
-// Offset of the write data register
+/// Offset of the write data register
 const UART_WDATA_OFFSET: usize = 0x1c;
-// Offset of the fifo control register
+/// Offset of the fifo control register
 const UART_FIFO_CTRL_OFFSET: usize = 0x20;
-// Offset of the fifo status register
+/// Offset of the fifo status register
 const UART_FIFO_STATUS_OFFSET: usize = 0x24;
 
 /// Offset of the NCO value inside the UartCTRL register
@@ -85,48 +85,48 @@ impl OpentitanUart {
         }
     }
 
-    // Returns pointer to control register
+    /// Returns pointer to control register
     unsafe fn _control_reg(&self) -> *mut u32 {
         self.base_address.add(UART_CTRL_OFFSET) as *mut u32
     }
 
-    // Returns pointer to status register
+    /// Returns pointer to status register
     unsafe fn _status_reg(&self) -> *mut u32 {
         self.base_address.add(UART_STATUS_OFFSET) as *mut u32
     }
 
-    // Returns pointer to read data register
+    /// Returns pointer to read data register
     unsafe fn _read_reg(&self) -> *mut u8 {
         self.base_address.add(UART_RDATA_OFFSET) as *mut u8
     }
 
-    // Returns pointer to write data register
+    /// Returns pointer to write data register
     unsafe fn _write_reg(&self) -> *mut u8 {
         self.base_address.add(UART_WDATA_OFFSET) as *mut u8
     }
 
-    // Returns pointer to fifo control register
+    /// Returns pointer to fifo control register
     unsafe fn _fifo_control_reg(&self) -> *mut u32 {
         self.base_address.add(UART_FIFO_CTRL_OFFSET) as *mut u32
     }
 
-    // Returns pointer to fifo status register
+    /// Returns pointer to fifo status register
     unsafe fn _fifo_status_reg(&self) -> *mut u32 {
         self.base_address.add(UART_FIFO_STATUS_OFFSET) as *mut u32
     }
 
-    // Uses the fifo control register to signal to the HWIP to reset the fifos
+    /// Uses the fifo control register to signal to the HWIP to reset the fifos
     unsafe fn reset_fifos(&self) {
         self._fifo_control_reg()
             .write_volatile((FifoCTRL::RX_RESET | FifoCTRL::TX_RESET).bits())
     }
 
-    // Returns the bytes currently in the sending queue
+    /// Returns the bytes currently in the sending queue
     unsafe fn get_tx_lvl(&self) -> u8 {
         ((self._fifo_status_reg().read_volatile() >> UART_TX_LVL_OFFSET) & UART_LVL_MASK) as u8
     }
 
-    // Returns the bytes currently in the receiving queue
+    /// Returns the bytes currently in the receiving queue
     unsafe fn get_rx_lvl(&self) -> u8 {
         ((self._fifo_status_reg().read_volatile() >> UART_RX_LVL_OFFSET) & UART_LVL_MASK) as u8
     }
@@ -157,6 +157,10 @@ impl OpentitanUart {
 
 impl Module for OpentitanUart {
     unsafe fn init(&mut self) -> Result<(), &'static str> {
+        if self.initialized {
+            return Ok(());
+        }
+
         let nco = ((self.baud_rate << 20) / self.clk_hz) & UART_NCO_MASK;
 
         // Set BAUD and enable RX & TX
@@ -183,7 +187,7 @@ impl Write for OpentitanUart {
         } else {
             unsafe {
                 for c in data.as_bytes() {
-                    while let Err(_) = self.put(*c) {
+                    while self.put(*c).is_err() {
                         core::hint::spin_loop();
                     }
                 }

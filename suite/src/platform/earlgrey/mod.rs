@@ -1,9 +1,11 @@
 use core::arch::global_asm;
 
-use crate::println;
+use crate::{modules::ModuleRef, println};
 
 use super::Platform;
 
+#[path = "../../modules/opentitan_hmac.rs"]
+mod opentitan_hmac;
 #[path = "../../modules/opentitan_uart.rs"]
 mod opentitan_uart;
 
@@ -14,6 +16,8 @@ global_asm!(include_str!("ibex_start.S"));
 // Note: clk_hz & baud_rate according to sw/device/lib/arch/device_sim_verilator.c
 static mut UART0: opentitan_uart::OpentitanUart =
     unsafe { opentitan_uart::OpentitanUart::new(0x4000_0000 as *mut u8, 7200, 125_000) };
+static mut HMAC: opentitan_hmac::OpentitanHMAC =
+    unsafe { opentitan_hmac::OpentitanHMAC::new(0x4111_0000 as *mut u8) };
 
 /// EarlGrey platform according to the Opentitan specification:
 ///
@@ -42,5 +46,9 @@ impl Platform for EarlGreyPlatform {
                 riscv::asm::wfi();
             }
         }
+    }
+
+    fn get_sha256_module(&self) -> Option<ModuleRef<dyn crate::modules::SHA256Module>> {
+        unsafe { Some(ModuleRef::new(&mut HMAC)) }
     }
 }
