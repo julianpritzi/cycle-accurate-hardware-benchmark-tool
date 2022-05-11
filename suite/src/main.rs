@@ -5,21 +5,27 @@
 #![test_runner(crate::runtime::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+mod cmd;
 mod modules;
 mod platform;
 #[macro_use]
 mod runtime;
 mod benchmark;
 
+use benchmark_common::{OutgoingMessage, SuiteStatus};
 use platform::Platform;
 use riscv_rt::entry;
 
 extern crate alloc;
 
 fn main() {
-    println!("Hello Opentitan World!");
+    runtime::send_message(&OutgoingMessage::Status(SuiteStatus::Ready));
 
-    benchmark::examples::sha256_benchmark(8);
+    loop {
+        if let Some(reply) = cmd::run_cmd(runtime::read_message()) {
+            runtime::send_message(&reply);
+        }
+    }
 }
 
 /// First function that is called once riscv_rt finished setting up the rust runtime.

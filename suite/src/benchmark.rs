@@ -9,6 +9,7 @@ use core::arch::asm;
 /// `csrr x, mcycle` and `csrr x, mcycleh` respectively, so this function can be called
 /// while being in machine mode.
 #[inline]
+#[allow(dead_code)]
 pub fn get_cycle() -> u64 {
     let counter_lo: u32;
     let counter_hi: u32;
@@ -28,6 +29,8 @@ pub fn get_cycle() -> u64 {
 }
 
 pub mod examples {
+    #![allow(dead_code)]
+    use benchmark_common::BenchmarkResult;
 
     use crate::platform::{self, Platform};
 
@@ -35,10 +38,8 @@ pub mod examples {
     ///
     /// # Arguments
     /// * `n` - the number of times the benchmark should be run
-    pub fn sha256_benchmark(n: u32) {
+    pub fn sha256_benchmark() -> Option<BenchmarkResult> {
         if let Some(hmac_module) = platform::current().get_sha256_module() {
-            println!("initialization, computation, reading_output");
-
             let input = [
                 0xdf3f6198, 0x04a92fdb, 0x4057192d, 0xc43dd748, 0xea778adc, 0x52bc498c, 0xe80524c0,
                 0x14b81119, 0xdf3f6198, 0x04a92fdb, 0x4057192d, 0xc43dd748, 0xea778adc, 0x52bc498c,
@@ -52,33 +53,33 @@ pub mod examples {
                 0x14b81119,
             ];
 
-            for _ in 0..n {
-                let mut output = [0u32; 8];
+            let mut output = [0u32; 8];
 
-                let cycle1 = super::get_cycle();
-                hmac_module.init_sha256();
-                let cycle2 = super::get_cycle();
-                hmac_module.write_input(&input);
-                hmac_module.wait_for_completion();
-                let cycle3 = super::get_cycle();
-                hmac_module.read_digest(&mut output);
-                let cycle4 = super::get_cycle();
+            let cycle1 = super::get_cycle();
+            hmac_module.init_sha256();
+            let cycle2 = super::get_cycle();
+            hmac_module.write_input(&input);
+            hmac_module.wait_for_completion();
+            let cycle3 = super::get_cycle();
+            hmac_module.read_digest(&mut output);
+            let cycle4 = super::get_cycle();
 
-                assert_eq!(
-                    output,
-                    [
-                        // precomputed by sha2 crate
-                        0xa24ef743, 0xed238e92, 0x8f5fe495, 0x7959a1fa, 0x06b1d250, 0x147ed98d,
-                        0xd817e3b2, 0xb32854ae,
-                    ]
-                );
+            assert_eq!(
+                output,
+                [
+                    // precomputed by sha2 crate
+                    0xa24ef743, 0xed238e92, 0x8f5fe495, 0x7959a1fa, 0x06b1d250, 0x147ed98d,
+                    0xd817e3b2, 0xb32854ae,
+                ]
+            );
 
-                let initialization = cycle2 - cycle1;
-                let computation = cycle3 - cycle2;
-                let reading_output = cycle4 - cycle3;
-
-                println!("{initialization}, {computation}, {reading_output}");
-            }
+            Some(BenchmarkResult::ExampleSHA256 {
+                initialization: cycle2 - cycle1,
+                computation: cycle3 - cycle2,
+                reading_output: cycle4 - cycle3,
+            })
+        } else {
+            None
         }
     }
 }

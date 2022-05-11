@@ -6,6 +6,7 @@ use core::{
     ptr::{self, NonNull},
 };
 
+use benchmark_common::{deserialize, serialize, IncomingMessage, OutgoingMessage};
 use linked_list_allocator::Heap;
 
 use crate::platform::{self, Platform};
@@ -44,6 +45,20 @@ pub unsafe fn init() -> Result<(), &'static str> {
     }
 
     Ok(())
+}
+
+/// Sends a message using the communication module by first serializing it
+///
+/// # Arguments
+///
+/// * `msg` - the message to send
+pub fn send_message(msg: &OutgoingMessage) {
+    crate::println!("{}", serialize(&msg));
+}
+
+/// Reads a message using the communication module and deserializes it
+pub fn read_message() -> IncomingMessage {
+    deserialize(crate::readln!())
 }
 
 /// Since the architecture is assumed to be on a single core and without atomic instructions

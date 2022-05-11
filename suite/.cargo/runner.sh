@@ -62,7 +62,7 @@ case "$USE_SIMULATOR" in
             -M virt \
             -cpu rv32 \
             -smp 1 \
-            -m 64K \
+            -m 32M \
             -display none \
             -bios none \
             -serial $SERIAL \

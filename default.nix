@@ -20,7 +20,11 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [
     git
+    python3
+    bash
     qemu
     rustToolchain
+    pkg-config
+    libudev
   ];
 }
