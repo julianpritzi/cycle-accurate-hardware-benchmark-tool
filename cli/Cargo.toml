@@ -1,0 +1,9 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "3.1.9", features = ["derive"] }
+serialport = { version = "^4", default-features = false }
+benchmark-common = { path = "../common", features = [ "cli" ] }
