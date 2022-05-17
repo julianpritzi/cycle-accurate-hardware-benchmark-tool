@@ -25,6 +25,7 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
             for _ in 0..n {
                 let result = match info {
                     benchmark_common::BenchmarkInfo::ExampleSHA256 => examples::sha256_benchmark(),
+                    benchmark_common::BenchmarkInfo::ExampleAES256 => examples::aes256_benchmark(),
                 };
 
                 if let Some(result) = result {

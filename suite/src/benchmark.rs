@@ -32,12 +32,14 @@ pub mod examples {
     #![allow(dead_code)]
     use benchmark_common::BenchmarkResult;
 
-    use crate::platform::{self, Platform};
+    use crate::{
+        modules::{AESKeyLength, AESMode, AESOperation},
+        platform::{self, Platform},
+    };
+
+    use super::get_cycle;
 
     /// Runs an example benchmark for the SHA256 module
-    ///
-    /// # Arguments
-    /// * `n` - the number of times the benchmark should be run
     pub fn sha256_benchmark() -> Option<BenchmarkResult> {
         if let Some(hmac_module) = platform::current().get_sha256_module() {
             let input = [
@@ -77,6 +79,73 @@ pub mod examples {
                 initialization: cycle2 - cycle1,
                 computation: cycle3 - cycle2,
                 reading_output: cycle4 - cycle3,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Runs an example benchmark for the AES module
+    pub fn aes256_benchmark() -> Option<BenchmarkResult> {
+        if let Some(aes_module) = platform::current().get_aes_module() {
+            let key_share0: [u32; 8] = [
+                0x0000_1111,
+                0x2222_3333,
+                0x4444_5555,
+                0x6666_7777,
+                0x0000_1111,
+                0x2222_3333,
+                0x4444_5555,
+                0x6666_7777,
+            ];
+            let key_share1: [u32; 8] = [0; 8];
+            let iv = 0xcccc_cccc_cccc_cccc_cccc_cccc_cccc_cccc;
+            let plaintext: [u128; 4] = [
+                0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff,
+                0x0000_0000_0000_0000_0000_0000_0000_0000,
+                0x0000_1111_2222_3333_4444_5555_6666_7777,
+                0x1234_4321_abcd_dcba_affa_afaf_0100_0010,
+            ];
+            let mut enc_buffer: [u128; 4] = [0, 0, 0, 0];
+            let mut dec_buffer: [u128; 4] = [0, 0, 0, 0];
+
+            let enc_c_1 = get_cycle();
+            aes_module.init_aes(
+                AESKeyLength::Aes256,
+                AESOperation::Encrypt,
+                AESMode::CTR { iv },
+                &key_share0,
+                &key_share1,
+            );
+            let enc_c_2 = get_cycle();
+            aes_module.execute(&plaintext, &mut enc_buffer);
+            let enc_c_3 = get_cycle();
+            aes_module.deinitialize();
+            let enc_c_4 = get_cycle();
+
+            let dec_c_1 = get_cycle();
+            aes_module.init_aes(
+                AESKeyLength::Aes256,
+                AESOperation::Decrypt,
+                AESMode::CTR { iv },
+                &key_share0,
+                &key_share1,
+            );
+            let dec_c_2 = get_cycle();
+            aes_module.execute(&enc_buffer, &mut dec_buffer);
+            let dec_c_3 = get_cycle();
+            aes_module.deinitialize();
+            let dec_c_4 = get_cycle();
+
+            assert_eq!(plaintext, dec_buffer);
+
+            Some(BenchmarkResult::ExampleAES256 {
+                enc_initialization: enc_c_2 - enc_c_1,
+                enc_computation: enc_c_3 - enc_c_2,
+                enc_deinitalization: enc_c_4 - enc_c_3,
+                dec_initialization: dec_c_2 - dec_c_1,
+                dec_computation: dec_c_3 - dec_c_2,
+                dec_deinitalization: dec_c_4 - dec_c_3,
             })
         } else {
             None

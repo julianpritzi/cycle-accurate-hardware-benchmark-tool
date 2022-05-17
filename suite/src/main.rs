@@ -5,12 +5,12 @@
 #![test_runner(crate::runtime::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-mod cmd;
-mod modules;
-mod platform;
 #[macro_use]
 mod runtime;
 mod benchmark;
+mod cmd;
+mod modules;
+mod platform;
 
 use benchmark_common::{OutgoingMessage, SuiteStatus};
 use platform::Platform;

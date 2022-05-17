@@ -4,6 +4,8 @@ use crate::{modules::ModuleRef, println};
 
 use super::Platform;
 
+#[path = "../../modules/opentitan_aes.rs"]
+mod opentitan_aes;
 #[path = "../../modules/opentitan_hmac.rs"]
 mod opentitan_hmac;
 #[path = "../../modules/opentitan_uart.rs"]
@@ -18,6 +20,8 @@ static mut UART0: opentitan_uart::OpentitanUart =
     unsafe { opentitan_uart::OpentitanUart::new(0x4000_0000 as *mut u8, 7200, 125_000) };
 static mut HMAC: opentitan_hmac::OpentitanHMAC =
     unsafe { opentitan_hmac::OpentitanHMAC::new(0x4111_0000 as *mut u8) };
+static mut AES: opentitan_aes::OpentitanAES =
+    unsafe { opentitan_aes::OpentitanAES::new(0x4110_0000 as *mut u8) };
 
 /// EarlGrey platform according to the Opentitan specification:
 ///
@@ -50,5 +54,9 @@ impl Platform for EarlGreyPlatform {
 
     fn get_sha256_module(&self) -> Option<ModuleRef<dyn crate::modules::SHA256Module>> {
         unsafe { Some(ModuleRef::new(&mut HMAC)) }
+    }
+
+    fn get_aes_module(&self) -> Option<ModuleRef<dyn crate::modules::AESModule>> {
+        unsafe { Some(ModuleRef::new(&mut AES)) }
     }
 }

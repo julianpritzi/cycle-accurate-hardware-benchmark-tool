@@ -1,4 +1,4 @@
-use crate::modules::{CommunicationModule, ModuleRef, SHA256Module};
+use crate::modules::{AESModule, CommunicationModule, ModuleRef, SHA256Module};
 
 #[cfg(feature = "platform_verilator_earlgrey")]
 mod earlgrey;
@@ -32,6 +32,11 @@ pub trait Platform {
 
     /// Returns the platforms SHA256 module if one is present.
     fn get_sha256_module(&self) -> Option<ModuleRef<dyn SHA256Module>> {
+        None
+    }
+
+    /// Returns the platforms aes module if one is present.
+    fn get_aes_module(&self) -> Option<ModuleRef<dyn AESModule>> {
         None
     }
 
