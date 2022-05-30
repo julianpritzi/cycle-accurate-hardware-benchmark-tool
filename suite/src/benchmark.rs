@@ -30,6 +30,7 @@ pub fn get_cycle() -> u64 {
 
 pub mod examples {
     #![allow(dead_code)]
+    use alloc::vec;
     use benchmark_common::BenchmarkResult;
 
     use crate::{
@@ -146,6 +147,29 @@ pub mod examples {
                 dec_initialization: dec_c_2 - dec_c_1,
                 dec_computation: dec_c_3 - dec_c_2,
                 dec_deinitalization: dec_c_4 - dec_c_3,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Runs an example benchmark for the rng module
+    pub fn rng_benchmark() -> Option<BenchmarkResult> {
+        if let Some(rng_module) = platform::current().get_rng_module() {
+            let seed = Some(vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+            let mut random_numbers = [0; 32];
+
+            let cycle1 = get_cycle();
+            rng_module.init_rng(seed);
+            let cycle2 = get_cycle();
+            for num in &mut random_numbers[..] {
+                *num = rng_module.generate();
+            }
+            let cycle3 = get_cycle();
+
+            Some(BenchmarkResult::ExampleRNG {
+                initialization: cycle2 - cycle1,
+                generation: cycle3 - cycle2,
             })
         } else {
             None

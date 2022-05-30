@@ -10,7 +10,7 @@ use core::{
     ptr::NonNull,
 };
 
-use alloc::string::String;
+use alloc::{string::String, vec::Vec};
 
 /// Generic module trait, implemented by all modules.
 pub trait Module {
@@ -166,6 +166,15 @@ pub trait AESModule: Module {
 
     /// Blocks until the SHA256 module completed computation
     fn deinitialize(&self);
+}
+
+/// Module for random number generation
+pub trait RNGModule: Module {
+    /// Initialize the module, optionally provide a seed
+    fn init_rng(&self, seed: Option<Vec<u32>>);
+
+    /// Generate a random number
+    fn generate(&self) -> u128;
 }
 
 /// Wrapper for a pointer to a Module
