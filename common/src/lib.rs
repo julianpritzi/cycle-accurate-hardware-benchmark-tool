@@ -39,6 +39,7 @@ pub enum _CliToSuiteMessage {
 pub enum BenchmarkInfo {
     /// Run the example SHA256 benchmark
     ExampleSHA256,
+    ExampleAES256,
 }
 
 /// Messages sent from the Suite to the CLI
@@ -57,13 +58,21 @@ pub enum _SuiteToCliMessage {
     Invalid(String),
 }
 
-/// Represents all the result of a single benchmark
+/// Represents all the results of a single benchmark
 #[derive(Debug, Serialize, Deserialize)]
 pub enum BenchmarkResult {
     ExampleSHA256 {
         initialization: u64,
         computation: u64,
         reading_output: u64,
+    },
+    ExampleAES256 {
+        enc_initialization: u64,
+        enc_computation: u64,
+        enc_deinitalization: u64,
+        dec_initialization: u64,
+        dec_computation: u64,
+        dec_deinitalization: u64,
     },
 }
 
