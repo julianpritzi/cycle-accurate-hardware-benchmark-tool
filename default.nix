@@ -25,6 +25,6 @@ stdenv.mkDerivation rec {
     qemu
     rustToolchain
     pkg-config
-    libudev
+    udev
   ];
 }
