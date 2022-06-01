@@ -50,6 +50,12 @@ pub unsafe fn init() -> Result<(), &'static str> {
         }
     }
 
+    if let Some(mut module) = platform::current().get_rng_module() {
+        if !module.initialized() {
+            module.init()?;
+        }
+    }
+
     Ok(())
 }
 

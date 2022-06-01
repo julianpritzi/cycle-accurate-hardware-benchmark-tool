@@ -40,6 +40,7 @@ pub enum BenchmarkInfo {
     /// Run the example SHA256 benchmark
     ExampleSHA256,
     ExampleAES256,
+    ExampleRNG,
 }
 
 /// Messages sent from the Suite to the CLI
@@ -73,6 +74,10 @@ pub enum BenchmarkResult {
         dec_initialization: u64,
         dec_computation: u64,
         dec_deinitalization: u64,
+    },
+    ExampleRNG {
+        initialization: u64,
+        generation: u64,
     },
 }
 

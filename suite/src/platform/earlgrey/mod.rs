@@ -6,6 +6,8 @@ use super::Platform;
 
 #[path = "../../modules/opentitan_aes.rs"]
 mod opentitan_aes;
+#[path = "../../modules/opentitan_csrng.rs"]
+mod opentitan_csrng;
 #[path = "../../modules/opentitan_hmac.rs"]
 mod opentitan_hmac;
 #[path = "../../modules/opentitan_uart.rs"]
@@ -22,6 +24,8 @@ static mut HMAC: opentitan_hmac::OpentitanHMAC =
     unsafe { opentitan_hmac::OpentitanHMAC::new(0x4111_0000 as *mut u8) };
 static mut AES: opentitan_aes::OpentitanAES =
     unsafe { opentitan_aes::OpentitanAES::new(0x4110_0000 as *mut u8) };
+static mut CSRNG: opentitan_csrng::OpentitanCSRNG =
+    unsafe { opentitan_csrng::OpentitanCSRNG::new(0x41150000 as *mut u8) };
 
 /// EarlGrey platform according to the Opentitan specification:
 ///
@@ -58,5 +62,9 @@ impl Platform for EarlGreyPlatform {
 
     fn get_aes_module(&self) -> Option<ModuleRef<dyn crate::modules::AESModule>> {
         unsafe { Some(ModuleRef::new(&mut AES)) }
+    }
+
+    fn get_rng_module(&self) -> Option<ModuleRef<dyn crate::modules::RNGModule>> {
+        unsafe { Some(ModuleRef::new(&mut CSRNG)) }
     }
 }
