@@ -27,6 +27,7 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
                     benchmark_common::BenchmarkInfo::ExampleSHA256 => examples::sha256_benchmark(),
                     benchmark_common::BenchmarkInfo::ExampleAES256 => examples::aes256_benchmark(),
                     benchmark_common::BenchmarkInfo::ExampleRNG => examples::rng_benchmark(),
+                    benchmark_common::BenchmarkInfo::ExampleECDSA => examples::ecdsa_benchmark(),
                 };
 
                 if let Some(result) = result {

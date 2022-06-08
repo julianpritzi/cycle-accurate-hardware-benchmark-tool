@@ -30,7 +30,14 @@ The code of the benchmarking suite uses two main abstractions:
 
 ### Manual Usage
 
-The benchmarking suite can be built using `cargo build`.
+First set the `OPENTITAN_LIBS_PATH` environment variable to a folder containing the required opentitan libraries.
+The following are the libraries that are required, they are also listed in the `reproduce.py` script:
+* libsw_lib_crypto_ecdsa_p256.a
+* libp256_ecdsa.a
+* libsw_lib_crypto_otbn_util.a
+* libsw_lib_crypto_otbn.a
+
+The benchmarking suite can then be built using `cargo build`.
 
 **Running/Testing using the Qemu emulator:**
 

@@ -41,6 +41,7 @@ pub enum BenchmarkInfo {
     ExampleSHA256,
     ExampleAES256,
     ExampleRNG,
+    ExampleECDSA,
 }
 
 /// Messages sent from the Suite to the CLI
@@ -78,6 +79,10 @@ pub enum BenchmarkResult {
     ExampleRNG {
         initialization: u64,
         generation: u64,
+    },
+    ExampleECDSA {
+        signing: u64,
+        verifying: u64,
     },
 }
 

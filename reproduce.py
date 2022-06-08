@@ -26,6 +26,14 @@ VERILATOR_OTP_PATH = OPENTITAN_PATH.joinpath(
 
 SUITE_RUNNER_PATH = CWD.joinpath("suite/.cargo/runner.sh")
 
+OPENTITAN_LIBS_PATH = CWD.joinpath("target", "opentitan_libs")
+OPENTITAN_LIBS = [
+    "sw/device/lib/crypto/ecdsa_p256/libsw_lib_crypto_ecdsa_p256.a",
+    "sw/otbn/libp256_ecdsa.a",
+    "sw/device/lib/crypto/libsw_lib_crypto_otbn_util.a",
+    "sw/device/lib/crypto/drivers/libsw_lib_crypto_otbn.a",
+]
+
 
 # ------ Output Formatting ------
 
@@ -116,6 +124,18 @@ def build_opentitan(nix_shell: str) -> None:
     else:
         info("Verilator earlgrey simulator detected, skipping build")
 
+    # Build opentitan libraries
+    os.makedirs(OPENTITAN_LIBS_PATH, exist_ok=True)
+
+    opentitan_lib_build_out = OPENTITAN_PATH.joinpath("build-out")
+    for lib in OPENTITAN_LIBS:
+        target_path = OPENTITAN_LIBS_PATH.joinpath(Path(lib).name)
+
+        if not target_path.exists():
+            run([nix_shell, "--run", f"ninja -C build-out {lib}", "--keep", "TOOLCHAIN_PATH"], cwd=OPENTITAN_PATH,
+                extra_env={"TOOLCHAIN_PATH": str(TOOLCHAIN_PATH)})
+            shutil.copy(opentitan_lib_build_out.joinpath(lib), target_path)
+
     success = True
     if not VERILATOR_SIM_PATH.exists():
         error(f"Error: Earlgrey chip binary not found at {VERILATOR_SIM_PATH}")
@@ -126,6 +146,11 @@ def build_opentitan(nix_shell: str) -> None:
     if not VERILATOR_ROM_PATH.exists():
         error(f"Error: Opentitan ROM not found at {VERILATOR_ROM_PATH}")
         success = False
+    for lib in OPENTITAN_LIBS:
+        target_path = OPENTITAN_LIBS_PATH.joinpath(Path(lib).name)
+        if not target_path.exists():
+            error(f"Error: Opentitan Library {target_path} missing")
+            success = False
 
     if not success:
         error("Aborting due to previous errors")
@@ -133,7 +158,8 @@ def build_opentitan(nix_shell: str) -> None:
 
 
 def build_suite(nix_shell: str) -> None:
-    run([nix_shell, "--run", f"cd suite && cargo build --release"])
+    run([nix_shell, "--run", f"cd suite && cargo build --release", "--keep",
+        "OPENTITAN_LIBS_PATH"], extra_env={"OPENTITAN_LIBS_PATH": str(OPENTITAN_LIBS_PATH)})
 
 
 def build_cli(nix_shell: str) -> None:
@@ -148,6 +174,7 @@ def start_suite(nix_shell: str) -> subprocess.Popen[bytes]:
         "VERILATOR_SIM": str(VERILATOR_SIM_PATH),
         "VERILATOR_ROM": str(VERILATOR_ROM_PATH),
         "VERILATOR_OTP": str(VERILATOR_OTP_PATH),
+        "OPENTITAN_LIBS_PATH": str(OPENTITAN_LIBS_PATH),
     })
 
     info("Starting suite in background")
