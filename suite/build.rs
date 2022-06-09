@@ -23,6 +23,10 @@ fn main() {
 
     println!("cargo:rustc-link-search={}", dest_path.display());
 
+    let ot_libs = env::var("OPENTITAN_LIBS_PATH")
+        .expect("Missing opentitan libraries, OPENTITAN_LIBS_PATH environment variable");
+    println!("cargo:rustc-link-search={}", ot_libs);
+
     println!("cargo:rerun-if-changed=memory/qemu_virt.x");
     println!("cargo:rerun-if-changed=memory/verilator_earlgrey.x");
     println!("cargo:rerun-if-changed=build.rs");

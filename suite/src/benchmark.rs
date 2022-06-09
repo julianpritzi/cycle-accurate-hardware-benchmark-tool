@@ -34,6 +34,10 @@ pub mod examples {
     use benchmark_common::BenchmarkResult;
 
     use crate::{
+        libs::ecdsa::{
+            ecdsa_p256_message_digest_t, ecdsa_p256_private_key_t, ecdsa_p256_public_key_t,
+            ecdsa_p256_sign, ecdsa_p256_signature_t, ecdsa_p256_verify, hardened_bool_t,
+        },
         modules::{AESKeyLength, AESMode, AESOperation},
         platform::{self, Platform},
     };
@@ -174,5 +178,64 @@ pub mod examples {
         } else {
             None
         }
+    }
+
+    /// Runs an example benchmark for the ecdsa library
+    pub fn ecdsa_benchmark() -> Option<BenchmarkResult> {
+        #[cfg(feature = "platform_verilator_earlgrey")]
+        {
+            // public and private part of the ECDSA key was manually generated.
+            let priv_key = ecdsa_p256_private_key_t {
+                d: [
+                    0xe32ae325, 0xba720dd6, 0x7a61c7bf, 0x042a9ce2, 0x1caf1e98, 0xdada301d,
+                    0x209ab209, 0x69d57c5c,
+                ],
+            };
+            let pub_key = ecdsa_p256_public_key_t {
+                x: [
+                    0x2119818f, 0x4bf23e33, 0xa6730cc3, 0x7f88c59f, 0xd73e9dab, 0x0e28969b,
+                    0x4560410e, 0xda6152c2,
+                ],
+                y: [
+                    0x9dccc8a7, 0xf2f07fac, 0xb22c083e, 0xf519656d, 0x86ed498a, 0x9eceefab,
+                    0x82219250, 0x54b75d6a,
+                ],
+            };
+            let digest = ecdsa_p256_message_digest_t {
+                h: [
+                    0x9dccc8a7, 0xf2f07fac, 0xb22c083e, 0xf519656d, 0x86ed498a, 0x9eceefab,
+                    0x82219250, 0x54b75d6a,
+                ],
+            };
+            let mut signed_digest_buffer = ecdsa_p256_signature_t {
+                r: [0; 8],
+                s: [0; 8],
+            };
+            let mut verification_result = hardened_bool_t::HardenedBoolInvalid;
+
+            let c_1 = get_cycle();
+            unsafe {
+                ecdsa_p256_sign(&digest, &priv_key, &mut signed_digest_buffer);
+            }
+            let c_2 = get_cycle();
+            unsafe {
+                ecdsa_p256_verify(
+                    &signed_digest_buffer,
+                    &digest,
+                    &pub_key,
+                    &mut verification_result,
+                );
+            }
+            let c_3 = get_cycle();
+
+            assert_eq!(verification_result, hardened_bool_t::HardenedBoolTrue);
+
+            return Some(BenchmarkResult::ExampleECDSA {
+                signing: c_2 - c_1,
+                verifying: c_3 - c_2,
+            });
+        }
+        #[allow(unreachable_code)]
+        None
     }
 }

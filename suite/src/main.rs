@@ -9,6 +9,7 @@
 mod runtime;
 mod benchmark;
 mod cmd;
+mod libs;
 mod modules;
 mod platform;
 
