@@ -13,6 +13,7 @@ use super::otbn::otbn_error_t;
 /// materialized with a single instruction on RISC-V. They are also specifically
 /// not the complement of each other.
 #[repr(C)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum hardened_bool_t {
     /// The truthy value, expected to be used like #true.
     HardenedBoolTrue = 0x739,
