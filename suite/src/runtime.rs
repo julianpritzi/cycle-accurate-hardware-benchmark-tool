@@ -115,26 +115,35 @@ unsafe impl GlobalAlloc for CustomHeap {
 /// Uses the Communication module for output.
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => (unsafe {
-        use crate::platform::Platform;
-        write!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
-    });
+    ($($arg:tt)*) => (
+        #[allow(unused_unsafe)]
+        unsafe {
+            use crate::platform::Platform;
+            write!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
+        }
+    );
 }
 
 /// Println macro that can be used like the println macro from rust's standard library.
 /// Uses the Communication module for output.
 #[macro_export]
 macro_rules! println {
-    () => (unsafe {
-        #[allow(unused_imports)]
-        use crate::platform::Platform;
-        writeln!($crate::platform::current().get_communication_module()).unwrap();
-    });
-    ($($arg:tt)*) => (unsafe {
-        #[allow(unused_imports)]
-        use crate::platform::Platform;
-        writeln!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
-    });
+    () => (
+        #[allow(unused_unsafe)]
+        unsafe {
+            #[allow(unused_imports)]
+            use crate::platform::Platform;
+            writeln!($crate::platform::current().get_communication_module()).unwrap();
+        }
+    );
+    ($($arg:tt)*) => (
+        #[allow(unused_unsafe)]
+        unsafe {
+            #[allow(unused_imports)]
+            use crate::platform::Platform;
+            writeln!($crate::platform::current().get_communication_module(), $($arg)*).unwrap();
+        }
+    );
 }
 
 /// Reads one line using the Communication module and returns it as a String.

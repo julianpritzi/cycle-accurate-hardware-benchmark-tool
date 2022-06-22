@@ -1,6 +1,9 @@
 use crate::modules::{AESModule, CommunicationModule, ModuleRef, RNGModule, SHA256Module};
 
-#[cfg(feature = "platform_verilator_earlgrey")]
+#[cfg(any(
+    feature = "platform_verilator_earlgrey",
+    feature = "platform_nexysvideo_earlgrey"
+))]
 mod earlgrey;
 #[cfg(feature = "platform_qemu_virt")]
 mod virt;
@@ -11,7 +14,10 @@ pub fn current() -> impl Platform {
     {
         virt::VirtPlatform
     }
-    #[cfg(feature = "platform_verilator_earlgrey")]
+    #[cfg(any(
+        feature = "platform_verilator_earlgrey",
+        feature = "platform_nexysvideo_earlgrey"
+    ))]
     {
         earlgrey::EarlGreyPlatform
     }

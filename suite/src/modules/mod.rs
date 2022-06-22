@@ -211,6 +211,8 @@ impl<T: Module + ?Sized> DerefMut for ModuleRef<T> {
 
 #[cfg(test)]
 mod tests {
+    use alloc::vec;
+
     use crate::{mark_test_as_skipped, platform, platform::Platform};
 
     use super::{AESKeyLength, AESMode, AESOperation};
@@ -512,6 +514,42 @@ mod tests {
             aes_module.deinitialize();
 
             assert_eq!(plaintext, dec_buffer);
+        } else {
+            mark_test_as_skipped!()
+        }
+    }
+
+    #[test_case]
+    fn csrng_seeded_is_correct() {
+        if let Some(rng) = platform::current().get_rng_module() {
+            if cfg!(feature = "platform_nexysvideo_earlgrey") {
+                rng.init_rng(Some(vec![
+                    651981, 19191, 165996, 215151, 816547, 20, 0, 1616, 1616651651, 8546, 999, 1561,
+                ]));
+
+                assert_eq!(rng.generate(), 153684701634699060983499893045240912715u128);
+                assert_eq!(rng.generate(), 301721415404207314724546574610589213438u128);
+                assert_eq!(rng.generate(), 64250610127905256792585182264175928463u128);
+            } else {
+                // This test can only be run on nexysvideo because verilator does not simulate the CSRNG module correctly
+                mark_test_as_skipped!()
+            }
+        } else {
+            mark_test_as_skipped!()
+        }
+    }
+
+    #[test_case]
+    fn csrng_unseeded_terminates() {
+        if let Some(rng) = platform::current().get_rng_module() {
+            if cfg!(feature = "platform_nexysvideo_earlgrey") {
+                rng.init_rng(None);
+
+                rng.generate();
+            } else {
+                // This test can only be run on nexysvideo because verilator does not simulate the CSRNG module correctly
+                mark_test_as_skipped!()
+            }
         } else {
             mark_test_as_skipped!()
         }

@@ -1,4 +1,10 @@
-#[cfg(feature = "platform_verilator_earlgrey")]
+#[cfg(any(
+    feature = "platform_verilator_earlgrey",
+    feature = "platform_nexysvideo_earlgrey"
+))]
 pub mod ecdsa;
-#[cfg(feature = "platform_verilator_earlgrey")]
+#[cfg(any(
+    feature = "platform_verilator_earlgrey",
+    feature = "platform_nexysvideo_earlgrey"
+))]
 pub mod otbn;

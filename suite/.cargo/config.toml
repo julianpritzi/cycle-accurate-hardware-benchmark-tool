@@ -1,8 +1,5 @@
 [target.riscv32imc-unknown-none-elf]
-rustflags = [
-  "-C", "link-arg=-Tmemory.x",
-  "-C", "link-arg=-Tlink.x",
-]
+rustflags = ["-C", "link-arg=-Tmemory.x", "-C", "link-arg=-Tlink.x"]
 
 runner = ".cargo/runner.sh"
 
@@ -19,3 +16,6 @@ run-verilator = "run --no-default-features --features platform_verilator_earlgre
 run-verilator-opt = "run --no-default-features --features platform_verilator_earlgrey --release -- -v"
 test-verilator = "test --no-default-features --features platform_verilator_earlgrey -- -v"
 test-verilator-opt = "test --no-default-features --features platform_verilator_earlgrey --release -- -v"
+build-nexysvideo = "build --no-default-features --features platform_nexysvideo_earlgrey"
+build-nexysvideo-opt = "build --no-default-features --features platform_nexysvideo_earlgrey --release"
+build-nexysvideo-test = "test --no-default-features --features platform_nexysvideo_earlgrey --no-run"

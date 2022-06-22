@@ -187,6 +187,12 @@ impl Write for OpentitanUart {
         } else {
             unsafe {
                 for c in data.as_bytes() {
+                    // Convert \n to \r\n
+                    if *c == '\n' as u8 {
+                        while self.put('\r' as u8).is_err() {
+                            core::hint::spin_loop();
+                        }
+                    }
                     while self.put(*c).is_err() {
                         core::hint::spin_loop();
                     }

@@ -33,11 +33,12 @@ pub mod examples {
     use alloc::vec;
     use benchmark_common::BenchmarkResult;
 
+    #[cfg(any(feature = "platform_nexysvideo_earlgrey"))]
+    use crate::libs::ecdsa::{
+        ecdsa_p256_message_digest_t, ecdsa_p256_private_key_t, ecdsa_p256_public_key_t,
+        ecdsa_p256_sign, ecdsa_p256_signature_t, ecdsa_p256_verify, hardened_bool_t,
+    };
     use crate::{
-        libs::ecdsa::{
-            ecdsa_p256_message_digest_t, ecdsa_p256_private_key_t, ecdsa_p256_public_key_t,
-            ecdsa_p256_sign, ecdsa_p256_signature_t, ecdsa_p256_verify, hardened_bool_t,
-        },
         modules::{AESKeyLength, AESMode, AESOperation},
         platform::{self, Platform},
     };
@@ -157,23 +158,99 @@ pub mod examples {
         }
     }
 
+    /// Runs an example benchmark for the AES module
+    pub fn aes128_benchmark() -> Option<BenchmarkResult> {
+        if let Some(aes_module) = platform::current().get_aes_module() {
+            let key_share0: [u32; 8] = [
+                0x0000_1111,
+                0x2222_3333,
+                0x4444_5555,
+                0x6666_7777,
+                0x0000_0000,
+                0x0000_0000,
+                0x0000_0000,
+                0x0000_0000,
+            ];
+            let key_share1: [u32; 8] = [0; 8];
+            let iv = 0xcccc_cccc_cccc_cccc_cccc_cccc_cccc_cccc;
+            let plaintext: [u128; 4] = [
+                0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff,
+                0x0000_0000_0000_0000_0000_0000_0000_0000,
+                0x0000_1111_2222_3333_4444_5555_6666_7777,
+                0x1234_4321_abcd_dcba_affa_afaf_0100_0010,
+            ];
+            let mut enc_buffer: [u128; 4] = [0; 4];
+            let mut dec_buffer: [u128; 4] = [0; 4];
+
+            let enc_c_1 = get_cycle();
+            aes_module.init_aes(
+                AESKeyLength::Aes128,
+                AESOperation::Encrypt,
+                AESMode::CTR { iv },
+                &key_share0,
+                &key_share1,
+            );
+            let enc_c_2 = get_cycle();
+            aes_module.execute(&plaintext, &mut enc_buffer);
+            let enc_c_3 = get_cycle();
+            aes_module.deinitialize();
+            let enc_c_4 = get_cycle();
+
+            let dec_c_1 = get_cycle();
+            aes_module.init_aes(
+                AESKeyLength::Aes128,
+                AESOperation::Decrypt,
+                AESMode::CTR { iv },
+                &key_share0,
+                &key_share1,
+            );
+            let dec_c_2 = get_cycle();
+            aes_module.execute(&enc_buffer, &mut dec_buffer);
+            let dec_c_3 = get_cycle();
+            aes_module.deinitialize();
+            let dec_c_4 = get_cycle();
+
+            assert_eq!(plaintext, dec_buffer);
+
+            Some(BenchmarkResult::ExampleAES128 {
+                enc_initialization: enc_c_2 - enc_c_1,
+                enc_computation: enc_c_3 - enc_c_2,
+                enc_deinitalization: enc_c_4 - enc_c_3,
+                dec_initialization: dec_c_2 - dec_c_1,
+                dec_computation: dec_c_3 - dec_c_2,
+                dec_deinitalization: dec_c_4 - dec_c_3,
+            })
+        } else {
+            None
+        }
+    }
+
     /// Runs an example benchmark for the rng module
     pub fn rng_benchmark() -> Option<BenchmarkResult> {
         if let Some(rng_module) = platform::current().get_rng_module() {
             let seed = Some(vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-            let mut random_numbers = [0; 32];
+            let mut random_numbers1 = [0; 32];
+            let mut random_numbers2 = [0; 32];
 
             let cycle1 = get_cycle();
             rng_module.init_rng(seed);
             let cycle2 = get_cycle();
-            for num in &mut random_numbers[..] {
+            for num in &mut random_numbers1[..] {
                 *num = rng_module.generate();
             }
             let cycle3 = get_cycle();
+            rng_module.init_rng(None);
+            let cycle4 = get_cycle();
+            for num in &mut random_numbers2[..] {
+                *num = rng_module.generate();
+            }
+            let cycle5 = get_cycle();
 
             Some(BenchmarkResult::ExampleRNG {
-                initialization: cycle2 - cycle1,
-                generation: cycle3 - cycle2,
+                seeded_initialization: cycle2 - cycle1,
+                seeded_generation: cycle3 - cycle2,
+                unseeded_initialization: cycle4 - cycle3,
+                unseeded_generation: cycle5 - cycle4,
             })
         } else {
             None
@@ -182,7 +259,7 @@ pub mod examples {
 
     /// Runs an example benchmark for the ecdsa library
     pub fn ecdsa_benchmark() -> Option<BenchmarkResult> {
-        #[cfg(feature = "platform_verilator_earlgrey")]
+        #[cfg(any(feature = "platform_nexysvideo_earlgrey"))]
         {
             // public and private part of the ECDSA key was manually generated.
             let priv_key = ecdsa_p256_private_key_t {

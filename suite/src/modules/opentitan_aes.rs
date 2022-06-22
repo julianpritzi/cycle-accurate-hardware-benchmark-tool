@@ -6,10 +6,10 @@ use bitflags::bitflags;
 bitflags! {
     /// Abstract representation of the control registers flags.
     struct AesCTRL: u32 {
-        /// Whether the key should be provided by the key manager or from software
-        const SIDELOADED = 1 << 11;
-        const MANUAL_OPERATION = 1 << 15;
-        const FORCE_ZERO_MASKS = 1 << 16;
+        /// Set if the AES module should decrypt, if not set it will encrypt
+        const DECRYPT = 1 << 0;
+        const MANUAL_OPERATION = 1 << 10;
+        const FORCE_ZERO_MASKS = 1 << 11;
     }
 
     /// Abstract representation of the trigger registers flags.
@@ -66,18 +66,16 @@ const AES_CTRL_SHADOWED_OFFSET: usize = 0x74;
 /// Contains offsets & masks for values inside the control register
 mod ctrl_reg {
     pub const OPERATION_OFFSET: u32 = 0x0;
-    pub const OPERATION_MASK: u32 = 0b11;
-    pub const MODE_OFFSET: u32 = 0x2;
+    pub const OPERATION_MASK: u32 = 0b1;
+    pub const MODE_OFFSET: u32 = 0x1;
     pub const MODE_MASK: u32 = 0b111111;
-    pub const KEY_LEN_OFFSET: u32 = 0x8;
+    pub const KEY_LEN_OFFSET: u32 = 0x7;
     pub const KEY_LEN_MASK: u32 = 0b111;
-    pub const PRNG_RESEED_RATE_OFFSET: u32 = 0x12;
-    pub const PRNG_RESEED_RATE_MASK: u32 = 0b111;
 }
 /// Offset of the status register.
-const AES_TRIGGER_OFFSET: usize = 0x80;
+const AES_TRIGGER_OFFSET: usize = 0x78;
 /// Offset of the status register.
-const AES_STATUS_OFFSET: usize = 0x84;
+const AES_STATUS_OFFSET: usize = 0x7c;
 
 /// AES driver implementation as described by:
 /// https://docs.opentitan.org/hw/ip/aes/doc/
@@ -158,7 +156,7 @@ impl OpentitanAES {
     #[inline]
     unsafe fn _wait_for(&self, status: AesSTATUS) {
         while !AesSTATUS::from_bits_unchecked(self._status_reg().read_volatile()).contains(status) {
-            core::hint::spin_loop()
+            core::hint::spin_loop();
         }
     }
 
@@ -217,21 +215,23 @@ impl AESModule for OpentitanAES {
 
     fn execute(&self, input: &[u128], output: &mut [u128]) {
         unsafe {
-            for blk_count in 0..(input.len() + 2) {
-                if blk_count == 1 {
-                    self._wait_for(AesSTATUS::INPUT_READY);
-                }
+            let input_len = input.len();
 
-                if blk_count > 1 {
-                    self._wait_for(AesSTATUS::OUTPUT_VALID);
+            self._input().write_volatile(input[0]);
+            while self._status_reg().read_volatile() & AesSTATUS::INPUT_READY.bits() == 0 {}
+            self._input().write_volatile(input[1]);
 
-                    output[blk_count - 2] = self._output().read();
-                }
+            for blk_count in 2..input_len {
+                while self._status_reg().read_volatile() & AesSTATUS::OUTPUT_VALID.bits() == 0 {}
+                output[blk_count - 2] = self._output().read_volatile();
 
-                if blk_count < input.len() {
-                    self._input().write_volatile(input[blk_count]);
-                }
+                self._input().write(input[blk_count]);
             }
+
+            while self._status_reg().read_volatile() & AesSTATUS::OUTPUT_VALID.bits() == 0 {}
+            output[input_len - 2] = self._output().read_volatile();
+            while self._status_reg().read_volatile() & AesSTATUS::OUTPUT_VALID.bits() == 0 {}
+            output[input_len - 1] = self._output().read_volatile();
         }
     }
 
@@ -287,8 +287,8 @@ fn _serialize_key_len(val: AESKeyLength) -> u32 {
 #[inline]
 fn _serialize_operation(val: AESOperation) -> u32 {
     let val = match val {
-        AESOperation::Encrypt => 0x1,
-        AESOperation::Decrypt => 0x2,
+        AESOperation::Encrypt => 0x0,
+        AESOperation::Decrypt => 0x1,
     };
 
     (val & ctrl_reg::OPERATION_MASK) << ctrl_reg::OPERATION_OFFSET

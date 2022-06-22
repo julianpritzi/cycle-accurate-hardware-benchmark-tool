@@ -14,12 +14,20 @@ mod opentitan_hmac;
 mod opentitan_uart;
 
 // Opentitan requires a manifest and custom interrupt vector,
-// these are realized in ibex_start.S and included here.
-global_asm!(include_str!("ibex_start.S"));
+// these are realized in ibex_start_XXX.S and included here.
+#[cfg(feature = "platform_verilator_earlgrey")]
+global_asm!(include_str!("ibex_start_verilator.S"));
+#[cfg(feature = "platform_nexysvideo_earlgrey")]
+global_asm!(include_str!("ibex_start_nexysvideo.S"));
 
+#[cfg(feature = "platform_verilator_earlgrey")]
 // Note: clk_hz & baud_rate according to sw/device/lib/arch/device_sim_verilator.c
 static mut UART0: opentitan_uart::OpentitanUart =
     unsafe { opentitan_uart::OpentitanUart::new(0x4000_0000 as *mut u8, 7200, 125_000) };
+#[cfg(feature = "platform_nexysvideo_earlgrey")]
+// Note: clk_hz & baud_rate according to sw/device/lib/arch/device_fpga_nexysvideo.c
+static mut UART0: opentitan_uart::OpentitanUart =
+    unsafe { opentitan_uart::OpentitanUart::new(0x4000_0000 as *mut u8, 115200, 25 * 100 * 1000) };
 static mut HMAC: opentitan_hmac::OpentitanHMAC =
     unsafe { opentitan_hmac::OpentitanHMAC::new(0x4111_0000 as *mut u8) };
 static mut AES: opentitan_aes::OpentitanAES =

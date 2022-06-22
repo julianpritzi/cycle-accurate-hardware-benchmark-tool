@@ -17,6 +17,8 @@ fn main() {
     let memory_information = include_bytes!("memory/qemu_virt.x");
     #[cfg(feature = "platform_verilator_earlgrey")]
     let memory_information = include_bytes!("memory/verilator_earlgrey.x");
+    #[cfg(feature = "platform_nexysvideo_earlgrey")]
+    let memory_information = include_bytes!("memory/nexysvideo_earlgrey.x");
 
     f.write_all(memory_information)
         .expect("Could not write file");
@@ -29,5 +31,8 @@ fn main() {
 
     println!("cargo:rerun-if-changed=memory/qemu_virt.x");
     println!("cargo:rerun-if-changed=memory/verilator_earlgrey.x");
+    println!("cargo:rerun-if-changed=memory/nexysvideo_earlgrey.x");
+    println!("cargo:rerun-if-changed=src/platform/earlgrey/ibex_start_nexysvideo.S");
+    println!("cargo:rerun-if-changed=src/platform/earlgrey/ibex_start_verilator.S");
     println!("cargo:rerun-if-changed=build.rs");
 }

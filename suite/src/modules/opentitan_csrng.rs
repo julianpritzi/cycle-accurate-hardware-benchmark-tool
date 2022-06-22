@@ -12,6 +12,12 @@ bitflags! {
         const CS_FATAL_ERR = 1 << 3;
     }
 
+    /// Abstract representation of the control register.
+    struct CsrngCONTROL: u32 {
+        const ENABLE = 1 << 0;
+        const AES_CIPHER_DISABLE = 1 << 1;
+    }
+
     /// Abstract representation of the command header flags.
     struct CsrngCMDHeader: u32 {
         const FLAG0 = 1 << 8;
@@ -80,7 +86,6 @@ bitflags! {
         const DRBG_UPDBE_SM_ERR = 1 << 23;
         const DRBG_UPDOB_SM_ERR = 1 << 24;
         const AES_CIPHER_SM_ERR = 1 << 25;
-        const CMD_GEN_CNT_ERR = 1 << 26;
         const FIFO_WRITE_ERR = 1 << 28;
         const FIFO_READ_ERR = 1 << 29;
         const FIFO_STATE_ERR = 1 << 30;
@@ -94,24 +99,17 @@ const CSRNG_REGWEN_OFFSET: usize = 0x10;
 /// Offset of the control register
 const CSRNG_CTRL_OFFSET: usize = 0x14;
 /// Offset of the command request register
-const CSRNG_CMD_REQ_OFFSET: usize = 0x18;
+const CSRNG_CMD_REQ_OFFSET: usize = 0x1c;
 /// Offset of the software command status register
-const CSRNG_SW_CMD_STS_OFFSET: usize = 0x1c;
+const CSRNG_SW_CMD_STS_OFFSET: usize = 0x20;
 /// Offset of the generated bits valid status register
-const CSRNG_GENBITS_VLD_OFFSET: usize = 0x20;
+const CSRNG_GENBITS_VLD_OFFSET: usize = 0x24;
 /// Offset of the generated bits register
-const CSRNG_GENBITS_OFFSET: usize = 0x24;
+const CSRNG_GENBITS_OFFSET: usize = 0x28;
 /// Offset of the interrupt state register
-const CSRNG_HW_EXEC_STS_OFFSET: usize = 0x30;
+const CSRNG_HW_EXEC_STS_OFFSET: usize = 0x3c;
 /// Offset of the error code register
-const CSRNG_ERR_CODE_OFFSET: usize = 0x38;
-
-/// Multi bit value representing true
-/// Used when a true value has to be represented with 4 bits
-const K_MULTI_BIT_BOOL4_TRUE: u32 = 0xA;
-/// Multi bit value representing false
-/// Used when a false value has to be represented with 4 bits
-const K_MULTI_BIT_BOOL4_FALSE: u32 = 0x5;
+const CSRNG_ERR_CODE_OFFSET: usize = 0x40;
 
 #[derive(Copy, Clone)]
 enum CsrngCMD {
@@ -219,9 +217,8 @@ impl OpentitanCSRNG {
 
 impl Module for OpentitanCSRNG {
     unsafe fn init(&mut self) -> Result<(), &'static str> {
-        self._control_reg().write_volatile(
-            K_MULTI_BIT_BOOL4_TRUE | (K_MULTI_BIT_BOOL4_TRUE << 4) | (K_MULTI_BIT_BOOL4_TRUE << 8),
-        );
+        self._control_reg()
+            .write_volatile(CsrngCONTROL::ENABLE.bits());
         self._hardware_exception_status_reg().write_volatile(0);
 
         Ok(())

@@ -23,7 +23,11 @@ impl SerialConnection {
     ///
     /// * `tty` - the path to the tty to connect to
     pub fn new(tty: &OsString) -> Result<SerialConnection, serialport::Error> {
-        let port = serialport::new(tty.to_string_lossy(), 9600)
+        let port = serialport::new(tty.to_string_lossy(), 115200)
+            .data_bits(serialport::DataBits::Eight)
+            .parity(serialport::Parity::None)
+            .stop_bits(serialport::StopBits::One)
+            .flow_control(serialport::FlowControl::None)
             .timeout(Duration::from_secs(60))
             .open_native()?;
         let term = SerialConnection {

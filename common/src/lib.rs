@@ -40,6 +40,7 @@ pub enum BenchmarkInfo {
     /// Run the example SHA256 benchmark
     ExampleSHA256,
     ExampleAES256,
+    ExampleAES128,
     ExampleRNG,
     ExampleECDSA,
 }
@@ -76,9 +77,19 @@ pub enum BenchmarkResult {
         dec_computation: u64,
         dec_deinitalization: u64,
     },
+    ExampleAES128 {
+        enc_initialization: u64,
+        enc_computation: u64,
+        enc_deinitalization: u64,
+        dec_initialization: u64,
+        dec_computation: u64,
+        dec_deinitalization: u64,
+    },
     ExampleRNG {
-        initialization: u64,
-        generation: u64,
+        seeded_initialization: u64,
+        seeded_generation: u64,
+        unseeded_initialization: u64,
+        unseeded_generation: u64,
     },
     ExampleECDSA {
         signing: u64,
