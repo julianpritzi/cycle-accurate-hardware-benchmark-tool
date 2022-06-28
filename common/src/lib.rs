@@ -25,8 +25,8 @@ pub enum _CliToSuiteMessage {
     Done,
     /// Requests the Suite to suspend with the given code
     Suspend(u32),
-    /// Requests the Suite to perform a benchmark, n times and return the result
-    Benchmark(BenchmarkInfo, u8),
+    /// Requests the Suite to perform a benchmark and return the result
+    Benchmark(BenchmarkInfo),
     /// Represents an Invalid message, it should not be sent intentionally,
     /// rather it is returned when an invalid message is deserialized
     ///
@@ -37,12 +37,17 @@ pub enum _CliToSuiteMessage {
 /// Represents all the information necessary to perform a benchmark
 #[derive(Debug, Serialize, Deserialize)]
 pub enum BenchmarkInfo {
-    /// Run the example SHA256 benchmark
-    ExampleSHA256,
-    ExampleAES256,
-    ExampleAES128,
-    ExampleRNG,
-    ExampleECDSA,
+    /// Perform the specified type of benchmark with the aes dataset identified by id
+    AESDataSet(AESBenchmarkType, usize),
+    RNGDataSet(usize),
+    SHA2DataSet(usize),
+}
+
+/// Represents all the possible types of benchmarks for the AES module
+#[derive(Debug, Serialize, Deserialize)]
+pub enum AESBenchmarkType {
+    EncryptionPerBlock,
+    DecryptionPerBlock,
 }
 
 /// Messages sent from the Suite to the CLI
@@ -53,7 +58,7 @@ pub enum _SuiteToCliMessage {
     /// Notifies the CLI that an error occurred on the Suite
     Error(String),
     /// Requests the Suite to perform a benchmark, n times and return the result
-    BenchmarkResults(Vec<BenchmarkResult>),
+    BenchmarkResults(Option<BenchmarkResult>),
     /// Represents an Invalid message, it should not be sent intentionally,
     /// rather it is returned when an invalid message is deserialized
     ///
@@ -64,37 +69,34 @@ pub enum _SuiteToCliMessage {
 /// Represents all the results of a single benchmark
 #[derive(Debug, Serialize, Deserialize)]
 pub enum BenchmarkResult {
-    ExampleSHA256 {
+    SHA2Total {
         initialization: u64,
         computation: u64,
         reading_output: u64,
     },
-    ExampleAES256 {
-        enc_initialization: u64,
-        enc_computation: u64,
-        enc_deinitalization: u64,
-        dec_initialization: u64,
-        dec_computation: u64,
-        dec_deinitalization: u64,
-    },
-    ExampleAES128 {
-        enc_initialization: u64,
-        enc_computation: u64,
-        enc_deinitalization: u64,
-        dec_initialization: u64,
-        dec_computation: u64,
-        dec_deinitalization: u64,
-    },
-    ExampleRNG {
+    RNGTotal {
         seeded_initialization: u64,
         seeded_generation: u64,
         unseeded_initialization: u64,
         unseeded_generation: u64,
     },
-    ExampleECDSA {
+    ECDSATotal {
         signing: u64,
         verifying: u64,
     },
+    AESPerBlock {
+        initialization: u64,
+        blocks: Vec<AesBlockResult>,
+        deinitalization: u64,
+    },
+}
+
+/// Represents the benchmarked time of a single block in aes
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AesBlockResult {
+    pub write_input: u64,
+    pub computation: u64,
+    pub read_output: u64,
 }
 
 /// Represents the status of the Suite

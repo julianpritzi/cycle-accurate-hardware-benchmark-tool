@@ -1,8 +1,8 @@
-use alloc::{format, vec::Vec};
-use benchmark_common::{BenchmarkResult, IncomingMessage, OutgoingMessage, SuiteStatus};
+use alloc::format;
+use benchmark_common::{IncomingMessage, OutgoingMessage, SuiteStatus};
 
 use crate::{
-    benchmark::examples,
+    benchmark::{aes_benchmark_per_block, datasets, rng_benchmark_total, sha2_benchmark_total},
     platform::{self, Platform},
 };
 
@@ -19,24 +19,51 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
         }
         IncomingMessage::Done => Some(OutgoingMessage::Status(SuiteStatus::Done)),
         IncomingMessage::GetStatus => Some(OutgoingMessage::Status(SuiteStatus::Ready)),
-        IncomingMessage::Benchmark(info, n) => {
-            let mut results: Vec<BenchmarkResult> = Vec::new();
+        IncomingMessage::Benchmark(info) => {
+            let result = match info {
+                benchmark_common::BenchmarkInfo::AESDataSet(bench_type, id) => {
+                    if id > datasets::aes::DATASETS.len() {
+                        return Some(OutgoingMessage::Error(format!(
+                            "No aes dataset with id {}",
+                            id
+                        )));
+                    }
+                    let dataset = &datasets::aes::DATASETS[id];
 
-            for _ in 0..n {
-                let result = match info {
-                    benchmark_common::BenchmarkInfo::ExampleSHA256 => examples::sha256_benchmark(),
-                    benchmark_common::BenchmarkInfo::ExampleAES256 => examples::aes256_benchmark(),
-                    benchmark_common::BenchmarkInfo::ExampleAES128 => examples::aes128_benchmark(),
-                    benchmark_common::BenchmarkInfo::ExampleRNG => examples::rng_benchmark(),
-                    benchmark_common::BenchmarkInfo::ExampleECDSA => examples::ecdsa_benchmark(),
-                };
-
-                if let Some(result) = result {
-                    results.push(result)
+                    match bench_type {
+                        benchmark_common::AESBenchmarkType::EncryptionPerBlock => {
+                            aes_benchmark_per_block(dataset, crate::modules::AESOperation::Encrypt)
+                        }
+                        benchmark_common::AESBenchmarkType::DecryptionPerBlock => {
+                            aes_benchmark_per_block(dataset, crate::modules::AESOperation::Decrypt)
+                        }
+                    }
                 }
-            }
+                benchmark_common::BenchmarkInfo::RNGDataSet(id) => {
+                    if id > datasets::rng::DATASETS.len() {
+                        return Some(OutgoingMessage::Error(format!(
+                            "No rng dataset with id {}",
+                            id
+                        )));
+                    }
+                    let dataset = &datasets::rng::DATASETS[id];
 
-            Some(OutgoingMessage::BenchmarkResults(results))
+                    rng_benchmark_total(dataset)
+                }
+                benchmark_common::BenchmarkInfo::SHA2DataSet(id) => {
+                    if id > datasets::sha256::DATASETS.len() {
+                        return Some(OutgoingMessage::Error(format!(
+                            "No rng dataset with id {}",
+                            id
+                        )));
+                    }
+                    let dataset = &datasets::sha256::DATASETS[id];
+
+                    sha2_benchmark_total(dataset)
+                }
+            };
+
+            Some(OutgoingMessage::BenchmarkResults(result))
         }
     }
 }
