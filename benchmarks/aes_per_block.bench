@@ -1,0 +1,17 @@
+# Benchmark to determine the block computation cycles,
+# when using tighter measurements.
+# All benchmarks are run using CTR mode on 5 x 128bit blocks of data
+
+# 256bit key
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},1]}}
+# 192bit key
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},7]}}
+# 128bit key
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},2]}}
+
+# 256bit key
+{"Benchmark":{"AESDataSet":[{"DecryptionPerBlock":false},1]}}
+# 192bit key
+{"Benchmark":{"AESDataSet":[{"DecryptionPerBlock":false},7]}}
+# 128bit key
+{"Benchmark":{"AESDataSet":[{"DecryptionPerBlock":false},2]}}

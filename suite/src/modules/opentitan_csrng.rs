@@ -230,7 +230,7 @@ impl Module for OpentitanCSRNG {
 }
 
 impl RNGModule for OpentitanCSRNG {
-    fn init_rng(&self, seed: Option<alloc::vec::Vec<u32>>) {
+    fn init_rng(&self, seed: Option<&[u32]>) {
         unsafe {
             let header = generate_header(CsrngCMD::Uninstantiate, 0, 0, 0);
             self.send_req_data(header);
@@ -257,19 +257,22 @@ impl RNGModule for OpentitanCSRNG {
         }
     }
 
-    fn generate(&self) -> u128 {
+    fn generate(&self) {
         unsafe {
             let header = generate_header(CsrngCMD::Generate, 0, 0, 1);
             self.send_req_data(header);
 
-            while !CsrngGENBITSValid::from_bits_unchecked(
-                self._generated_bits_valid_reg().read_volatile(),
-            )
-            .contains(CsrngGENBITSValid::GENBITS_VLD)
+            while self._generated_bits_valid_reg().read_volatile()
+                & CsrngGENBITSValid::GENBITS_VLD.bits()
+                == 0
             {
-                core::hint::spin_loop()
+                core::hint::spin_loop();
             }
+        }
+    }
 
+    fn read_output(&self) -> u128 {
+        unsafe {
             (self._generated_bits_reg().read_volatile() as u128) << (0 * 32)
                 | (self._generated_bits_reg().read_volatile() as u128) << (1 * 32)
                 | (self._generated_bits_reg().read_volatile() as u128) << (2 * 32)

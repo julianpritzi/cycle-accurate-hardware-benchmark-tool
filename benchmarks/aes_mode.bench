@@ -1,0 +1,17 @@
+# Benchmark comparing the different AES modes
+# All benchmarks are run using 256bit keys
+
+# CTR
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},1]}}
+
+# ECB
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},3]}}
+
+# CFB
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},4]}}
+
+# OFB
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},5]}}
+
+# CBC
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":false},6]}}

@@ -69,6 +69,7 @@ impl Write for SerialConnection {
 
 pub struct SuiteConnection {
     serial: SerialConnection,
+    verbose: bool,
 }
 
 impl SuiteConnection {
@@ -78,9 +79,12 @@ impl SuiteConnection {
     /// # Arguments
     ///
     /// * `serial` - the serial connection to use to communicate with the suite
-    pub fn new(serial: SerialConnection) -> Result<SuiteConnection, std::io::Error> {
-        let mut conn = SuiteConnection { serial };
+    pub fn new(serial: SerialConnection, verbose: bool) -> Result<SuiteConnection, std::io::Error> {
+        let mut conn = SuiteConnection { serial, verbose };
 
+        if verbose {
+            println!("New Connection.");
+        }
         conn.send_message(&OutgoingMessage::GetStatus);
 
         loop {
@@ -98,7 +102,11 @@ impl SuiteConnection {
     /// Read a message sent by the suite,
     /// fails if any errors occur during communication using the SerialConnection.
     pub fn read_message(&mut self) -> Result<IncomingMessage, std::io::Error> {
-        Ok(deserialize(self.serial.read_line()?))
+        let msg = deserialize(self.serial.read_line()?);
+        if self.verbose {
+            println!("< {msg:?}");
+        }
+        Ok(msg)
     }
 
     /// Send a message to the suite
@@ -107,6 +115,9 @@ impl SuiteConnection {
     ///
     /// * `msg` - the message that should be sent to the suite
     pub fn send_message(&mut self, msg: &OutgoingMessage) {
+        if self.verbose {
+            println!("> {msg:?}");
+        }
         writeln!(self.serial, "{}", serialize(msg)).expect("Failed to write to serial");
     }
 }

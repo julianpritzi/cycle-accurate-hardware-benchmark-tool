@@ -11,9 +11,11 @@ linked_list_allocator = { version = "^0.9.1", default-features = false, features
     "const_mut_refs",
 ] }
 benchmark-common = { path = "../common", features = ["suite"] }
+seq-macro = "^0.3.0"
 
 [features]
 default = ["platform_verilator_earlgrey"]
 platform_qemu_virt = []
 platform_verilator_earlgrey = []
 platform_nexysvideo_earlgrey = []
+opentitan_aes_masking = []

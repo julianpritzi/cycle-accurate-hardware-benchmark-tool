@@ -1,4 +1,6 @@
-use crate::modules::{AESModule, CommunicationModule, ModuleRef, RNGModule, SHA256Module};
+use crate::modules::CommunicationModule;
+
+use self::module_types::*;
 
 #[cfg(any(
     feature = "platform_verilator_earlgrey",
@@ -7,6 +9,29 @@ use crate::modules::{AESModule, CommunicationModule, ModuleRef, RNGModule, SHA25
 mod earlgrey;
 #[cfg(feature = "platform_qemu_virt")]
 mod virt;
+
+#[cfg(feature = "platform_qemu_virt")]
+pub mod module_types {
+    use crate::modules::empty::EmptyModule;
+
+    type SHA2Module = EmptyModule;
+    type SHA3Module = EmptyModule;
+    type AESModule = EmptyModule;
+    type RNGModule = EmptyModule;
+}
+
+#[cfg(any(
+    feature = "platform_verilator_earlgrey",
+    feature = "platform_nexysvideo_earlgrey"
+))]
+pub mod module_types {
+    use super::earlgrey;
+
+    pub type SHA2Module = earlgrey::opentitan_hmac::OpentitanHMAC;
+    pub type SHA3Module = earlgrey::opentitan_kmac::OpentitanKMAC;
+    pub type AESModule = earlgrey::opentitan_aes::OpentitanAES;
+    pub type RNGModule = earlgrey::opentitan_csrng::OpentitanCSRNG;
+}
 
 /// Returns the platform the suite was compiled for.
 pub fn current() -> impl Platform {
@@ -36,18 +61,31 @@ pub trait Platform {
     ///  - calling the function more than once might invalidate previous references
     unsafe fn get_communication_module(&self) -> &'static mut dyn CommunicationModule;
 
-    /// Returns the platforms SHA256 module if one is present.
-    fn get_sha256_module(&self) -> Option<ModuleRef<dyn SHA256Module>> {
+    /// Returns the platforms sha2 module if one is present.
+    ///
+    /// Returned type if present is guaranteed to implement the HashingModule trait
+    fn get_sha2_module(&self) -> Option<&'static mut SHA2Module> {
+        None
+    }
+
+    /// Returns the platforms sha3 module if one is present.
+    ///
+    /// Returned type if present is guaranteed to implement the HashingModule trait
+    fn get_sha3_module(&self) -> Option<&'static mut SHA3Module> {
         None
     }
 
     /// Returns the platforms aes module if one is present.
-    fn get_aes_module(&self) -> Option<ModuleRef<dyn AESModule>> {
+    ///
+    /// Returned type if present is guaranteed to implement the AESModule trait
+    fn get_aes_module(&self) -> Option<&'static mut AESModule> {
         None
     }
 
-    /// Returns the platforms aes module if one is present.
-    fn get_rng_module(&self) -> Option<ModuleRef<dyn RNGModule>> {
+    /// Returns the opentitan rng module if one is present.
+    ///
+    /// Returned type if present is guaranteed to implement the RNGModule trait
+    fn get_rng_module(&self) -> Option<&'static mut RNGModule> {
         None
     }
 

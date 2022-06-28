@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::modules::{Module, SHA256Module};
+use crate::modules::{HashingModule, Module};
 use bitflags::bitflags;
 
 bitflags! {
@@ -42,6 +42,9 @@ const HMAC_CFG_OFFSET: usize = 0x10;
 const HMAC_CMD_OFFSET: usize = 0x14;
 /// Offset of the status register
 const HMAC_STATUS_OFFSET: usize = 0x18;
+/// Offset of the fifo depth encoded in the status register
+const HMAC_STATUS_FIFO_DEPTH_OFFSET: u32 = 4;
+
 /// Offset of the digest register
 ///
 /// Digest can be used like an [u32; 8] residing at this offset
@@ -120,29 +123,29 @@ impl Module for OpentitanHMAC {
     }
 }
 
-impl SHA256Module for OpentitanHMAC {
-    fn init_sha256(&self) {
+impl HashingModule for OpentitanHMAC {
+    fn init_hashing(&self) {
         unsafe {
             self._config_reg()
-                .write_volatile(HmacCFG::SHA_ENABLED.bits())
+                .write_volatile(HmacCFG::SHA_ENABLED.bits());
+            self._command_reg()
+                .write_volatile(HmacCMD::HASH_START.bits());
         }
     }
 
-    fn write_input(&self, data: &[u32]) {
-        unsafe {
-            self._command_reg()
-                .write_volatile(HmacCMD::HASH_START.bits());
+    #[inline(always)]
+    unsafe fn write_input(&self, data: u32) {
+        self._msg_reg().write_volatile(data);
+    }
 
-            for value in data {
-                while HmacSTATUS::from_bits_unchecked(self._status_reg().read_volatile())
-                    .contains(HmacSTATUS::FIFO_FULL)
-                {
-                    core::hint::spin_loop()
-                }
+    #[inline(always)]
+    fn input_ready(&self) -> bool {
+        unsafe { self._status_reg().read_volatile() & HmacSTATUS::FIFO_FULL.bits() == 0 }
+    }
 
-                self._msg_reg().write_volatile(*value);
-            }
-        }
+    #[inline(always)]
+    fn get_fifo_elements(&self) -> u32 {
+        unsafe { self._status_reg().read_volatile() >> HMAC_STATUS_FIFO_DEPTH_OFFSET }
     }
 
     fn wait_for_completion(&self) {
@@ -150,8 +153,7 @@ impl SHA256Module for OpentitanHMAC {
             self._command_reg()
                 .write_volatile(HmacCMD::HASH_PROCESS.bits());
 
-            while !HmacINTRSTATE::from_bits_unchecked(self._interrupt_state_reg().read_volatile())
-                .contains(HmacINTRSTATE::HMAC_DONE)
+            while self._interrupt_state_reg().read_volatile() & HmacINTRSTATE::HMAC_DONE.bits() == 0
             {
                 core::hint::spin_loop()
             }

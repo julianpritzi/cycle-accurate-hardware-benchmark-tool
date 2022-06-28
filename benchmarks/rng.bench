@@ -1,0 +1,7 @@
+# Benchmark to determine cycles for generating random data.
+
+# 12 x 32bit software seeded
+{"Benchmark":{"RNGDataSet":0}}
+
+# entropy seeded
+{"Benchmark":{"RNGTrueRandom":3}}

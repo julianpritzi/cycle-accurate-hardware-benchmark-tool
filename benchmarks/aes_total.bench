@@ -1,0 +1,17 @@
+# Benchmark to determine the total aes computation cycles,
+# when using 2 stage pipelining
+# All benchmarks are run using CTR mode on 5 x 128bit blocks of data
+
+# 256bit key
+{"Benchmark":{"AESDataSet":["EncryptionTotal",1]}}
+# 192bit key
+{"Benchmark":{"AESDataSet":["EncryptionTotal",7]}}
+# 128bit key
+{"Benchmark":{"AESDataSet":["EncryptionTotal",2]}}
+
+# 256bit key
+{"Benchmark":{"AESDataSet":["DecryptionTotal",1]}}
+# 192bit key
+{"Benchmark":{"AESDataSet":["DecryptionTotal",7]}}
+# 128bit key
+{"Benchmark":{"AESDataSet":["DecryptionTotal",2]}}

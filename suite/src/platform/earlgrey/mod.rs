@@ -1,17 +1,19 @@
 use core::arch::global_asm;
 
-use crate::{modules::ModuleRef, println};
+use crate::println;
 
 use super::Platform;
 
 #[path = "../../modules/opentitan_aes.rs"]
-mod opentitan_aes;
+pub mod opentitan_aes;
 #[path = "../../modules/opentitan_csrng.rs"]
-mod opentitan_csrng;
+pub mod opentitan_csrng;
 #[path = "../../modules/opentitan_hmac.rs"]
-mod opentitan_hmac;
+pub mod opentitan_hmac;
+#[path = "../../modules/opentitan_kmac.rs"]
+pub mod opentitan_kmac;
 #[path = "../../modules/opentitan_uart.rs"]
-mod opentitan_uart;
+pub mod opentitan_uart;
 
 // Opentitan requires a manifest and custom interrupt vector,
 // these are realized in ibex_start_XXX.S and included here.
@@ -30,6 +32,8 @@ static mut UART0: opentitan_uart::OpentitanUart =
     unsafe { opentitan_uart::OpentitanUart::new(0x4000_0000 as *mut u8, 115200, 25 * 100 * 1000) };
 static mut HMAC: opentitan_hmac::OpentitanHMAC =
     unsafe { opentitan_hmac::OpentitanHMAC::new(0x4111_0000 as *mut u8) };
+static mut KMAC: opentitan_kmac::OpentitanKMAC =
+    unsafe { opentitan_kmac::OpentitanKMAC::new(0x41120000 as *mut u8) };
 static mut AES: opentitan_aes::OpentitanAES =
     unsafe { opentitan_aes::OpentitanAES::new(0x4110_0000 as *mut u8) };
 static mut CSRNG: opentitan_csrng::OpentitanCSRNG =
@@ -64,15 +68,19 @@ impl Platform for EarlGreyPlatform {
         }
     }
 
-    fn get_sha256_module(&self) -> Option<ModuleRef<dyn crate::modules::SHA256Module>> {
-        unsafe { Some(ModuleRef::new(&mut HMAC)) }
+    fn get_sha2_module(&self) -> Option<&'static mut opentitan_hmac::OpentitanHMAC> {
+        unsafe { Some(&mut HMAC) }
     }
 
-    fn get_aes_module(&self) -> Option<ModuleRef<dyn crate::modules::AESModule>> {
-        unsafe { Some(ModuleRef::new(&mut AES)) }
+    fn get_aes_module(&self) -> Option<&'static mut opentitan_aes::OpentitanAES> {
+        unsafe { Some(&mut AES) }
     }
 
-    fn get_rng_module(&self) -> Option<ModuleRef<dyn crate::modules::RNGModule>> {
-        unsafe { Some(ModuleRef::new(&mut CSRNG)) }
+    fn get_rng_module(&self) -> Option<&'static mut opentitan_csrng::OpentitanCSRNG> {
+        unsafe { Some(&mut CSRNG) }
+    }
+
+    fn get_sha3_module(&self) -> Option<&'static mut self::opentitan_kmac::OpentitanKMAC> {
+        unsafe { Some(&mut KMAC) }
     }
 }

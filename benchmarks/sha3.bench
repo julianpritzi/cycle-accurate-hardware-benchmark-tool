@@ -1,0 +1,13 @@
+# Benchmark to determine hashing cycles of the SHA3 module
+
+# 2048bits data, api conform
+{"Benchmark":{"HashDataSet":[{"SHA3":false},0]}}
+# 32bits data, api conform
+{"Benchmark":{"HashDataSet":[{"SHA3":false},1]}}
+# 8192bits data, api conform
+{"Benchmark":{"HashDataSet":[{"SHA3":false},2]}}
+
+# 2048bits data, tight
+{"Benchmark":{"HashDataSet":[{"SHA3":true},0]}}
+# 8192bits data, tight
+{"Benchmark":{"HashDataSet":[{"SHA3":true},2]}}
