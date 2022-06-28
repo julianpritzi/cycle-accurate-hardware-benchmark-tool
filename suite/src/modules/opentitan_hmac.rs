@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::modules::{Module, SHA256Module};
+use crate::modules::{HashingModule, Module};
 use bitflags::bitflags;
 
 bitflags! {
@@ -120,8 +120,8 @@ impl Module for OpentitanHMAC {
     }
 }
 
-impl SHA256Module for OpentitanHMAC {
-    fn init_sha256(&self) {
+impl HashingModule for OpentitanHMAC {
+    fn init_hashing(&self) {
         unsafe {
             self._config_reg()
                 .write_volatile(HmacCFG::SHA_ENABLED.bits())

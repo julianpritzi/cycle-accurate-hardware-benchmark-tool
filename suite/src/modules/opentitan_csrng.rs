@@ -230,7 +230,7 @@ impl Module for OpentitanCSRNG {
 }
 
 impl RNGModule for OpentitanCSRNG {
-    fn init_rng(&self, seed: Option<alloc::vec::Vec<u32>>) {
+    fn init_rng(&self, seed: Option<&[u32]>) {
         unsafe {
             let header = generate_header(CsrngCMD::Uninstantiate, 0, 0, 0);
             self.send_req_data(header);

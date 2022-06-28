@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-
 use crate::modules::{AESKeyLength, AESMode, AESModule, AESOperation, Module};
 use bitflags::bitflags;
 
@@ -155,7 +154,7 @@ impl OpentitanAES {
     /// Busy waits until some status is set
     #[inline]
     unsafe fn _wait_for(&self, status: AesSTATUS) {
-        while !AesSTATUS::from_bits_unchecked(self._status_reg().read_volatile()).contains(status) {
+        while self._status_reg().read_volatile() & status.bits() == 0 {
             core::hint::spin_loop();
         }
     }
@@ -182,21 +181,29 @@ impl Module for OpentitanAES {
 }
 
 impl AESModule for OpentitanAES {
+    #[inline]
     fn init_aes(
         &self,
-        key_len: AESKeyLength,
+        key_len: &AESKeyLength,
         operation: AESOperation,
-        mode: AESMode,
+        mode: &AESMode,
         key_share0: &[u32; 8],
         key_share1: &[u32; 8],
+        manual: bool,
     ) {
         unsafe {
             // Wait for the AES unit to become ready
             self._wait_for(AesSTATUS::IDLE);
 
             let (serialized_mode, iv) = _serialize_mode(mode);
-            let ctrl_val: u32 =
-                _serialize_key_len(key_len) | _serialize_operation(operation) | serialized_mode;
+            let ctrl_val: u32 = _serialize_key_len(key_len)
+                | _serialize_operation(operation)
+                | serialized_mode
+                | if manual {
+                    AesCTRL::MANUAL_OPERATION.bits()
+                } else {
+                    0
+                };
 
             self.write_ctrl(ctrl_val);
 
@@ -208,59 +215,16 @@ impl AESModule for OpentitanAES {
             self._wait_for(AesSTATUS::IDLE);
 
             if let Some(iv) = iv {
-                self._iv().write_volatile(iv);
+                self._iv().write_volatile(*iv);
             }
         }
     }
 
-    fn execute(&self, input: &[u128], output: &mut [u128]) {
-        unsafe {
-            let input_len = input.len();
-
-            self._input().write_volatile(input[0]);
-            while self._status_reg().read_volatile() & AesSTATUS::INPUT_READY.bits() == 0 {}
-            self._input().write_volatile(input[1]);
-
-            for blk_count in 2..input_len {
-                while self._status_reg().read_volatile() & AesSTATUS::OUTPUT_VALID.bits() == 0 {}
-                output[blk_count - 2] = self._output().read_volatile();
-
-                self._input().write(input[blk_count]);
-            }
-
-            while self._status_reg().read_volatile() & AesSTATUS::OUTPUT_VALID.bits() == 0 {}
-            output[input_len - 2] = self._output().read_volatile();
-            while self._status_reg().read_volatile() & AesSTATUS::OUTPUT_VALID.bits() == 0 {}
-            output[input_len - 1] = self._output().read_volatile();
-        }
-    }
-
-    fn execute_inplace(&self, data: &mut [u128]) {
-        unsafe {
-            for blk_count in 0..(data.len() + 2) {
-                if blk_count == 1 {
-                    self._wait_for(AesSTATUS::INPUT_READY);
-                }
-
-                if blk_count > 1 {
-                    self._wait_for(AesSTATUS::OUTPUT_VALID);
-
-                    data[blk_count - 2] = self._output().read();
-                }
-
-                if blk_count < data.len() {
-                    self._input().write_volatile(data[blk_count]);
-                }
-            }
-        }
-    }
-
+    #[inline]
     fn deinitialize(&self) {
         unsafe {
             let ctrl_val: u32 = AesCTRL::MANUAL_OPERATION.bits();
-            let ctrl_reg = self._control_reg();
-            ctrl_reg.write_volatile(ctrl_val);
-            ctrl_reg.write_volatile(ctrl_val);
+            self.write_ctrl(ctrl_val);
 
             self._trigger_reg().write_volatile(
                 (AesTRIGGER::KEY_IV_DATA_IN_CLEAR | AesTRIGGER::DATA_OUT_CLEAR).bits(),
@@ -269,11 +233,49 @@ impl AESModule for OpentitanAES {
             self._wait_for(AesSTATUS::IDLE);
         }
     }
+
+    #[inline(always)]
+    unsafe fn write_block(&self, block: u128) {
+        self._input().write_volatile(block);
+    }
+
+    #[inline(always)]
+    fn wait_for_input_ready(&self) {
+        unsafe {
+            self._wait_for(AesSTATUS::INPUT_READY);
+        }
+    }
+
+    #[inline(always)]
+    fn wait_for_output(&self) -> u32 {
+        unsafe {
+            self._wait_for(AesSTATUS::OUTPUT_VALID);
+            self._status_reg().read_volatile()
+        }
+    }
+
+    #[inline(always)]
+    fn wait_for_manual_output(&self) -> u32 {
+        unsafe {
+            self._trigger_reg().write_volatile(AesTRIGGER::START.bits());
+            self._wait_for(AesSTATUS::OUTPUT_VALID);
+            self._status_reg().read_volatile()
+        }
+    }
+
+    #[inline(always)]
+    unsafe fn read_block(&self, block: &mut u128) {
+        *block = self._output().read_volatile();
+    }
+
+    fn check_if_output_ready(&self, status: u32) -> bool {
+        status & AesSTATUS::OUTPUT_VALID.bits() > 0
+    }
 }
 
 /// Serializes the key length according to to the opentitan docs, so it can be directly written into the control register
 #[inline]
-fn _serialize_key_len(val: AESKeyLength) -> u32 {
+fn _serialize_key_len(val: &AESKeyLength) -> u32 {
     let val = match val {
         AESKeyLength::Aes128 => 0x1,
         AESKeyLength::Aes192 => 0x2,
@@ -298,7 +300,7 @@ fn _serialize_operation(val: AESOperation) -> u32 {
 /// so the first value can be directly written into the control register.
 /// The second value corresponds to an IV if present
 #[inline]
-fn _serialize_mode(val: AESMode) -> (u32, Option<u128>) {
+fn _serialize_mode(val: &AESMode) -> (u32, Option<&u128>) {
     let mut ret_iv = None;
     let val = match val {
         AESMode::ECB => 0x01,
