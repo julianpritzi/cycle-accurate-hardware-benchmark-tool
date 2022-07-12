@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use core::arch::asm;
+
 use crate::modules::{AESKeyLength, AESMode, AESModule, AESOperation, Module};
 use bitflags::bitflags;
 
@@ -235,34 +237,47 @@ impl AESModule for OpentitanAES {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     unsafe fn write_block(&self, block: u128) {
         self._input().write_volatile(block);
     }
 
-    #[inline]
+    #[inline(always)]
     fn wait_for_input_ready(&self) {
         unsafe {
             self._wait_for(AesSTATUS::INPUT_READY);
         }
     }
 
-    #[inline]
-    fn wait_for_output(&self) {
-        unsafe { self._wait_for(AesSTATUS::OUTPUT_VALID) }
-    }
-
-    #[inline]
-    fn wait_for_manual_output(&self) {
+    #[inline(always)]
+    fn wait_for_output(&self) -> u32 {
         unsafe {
-            self._trigger_reg().write_volatile(AesTRIGGER::START.bits());
-            self._wait_for(AesSTATUS::OUTPUT_VALID)
+            self._wait_for(AesSTATUS::OUTPUT_VALID);
+            self._status_reg().read_volatile()
         }
     }
 
-    #[inline]
+    #[inline(always)]
+    fn wait_for_manual_output(&self) -> u32 {
+        unsafe {
+            self._trigger_reg().write_volatile(AesTRIGGER::START.bits());
+            asm!(
+                // for unmasked implementation & aes256
+                //"nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop"
+                // for unmasked implementation & aes128
+                "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop"
+            );
+            self._status_reg().read_volatile()
+        }
+    }
+
+    #[inline(always)]
     unsafe fn read_block(&self, block: &mut u128) {
         *block = self._output().read_volatile();
+    }
+
+    fn check_if_output_ready(&self, status: u32) -> bool {
+        status & AesSTATUS::OUTPUT_VALID.bits() > 0
     }
 }
 

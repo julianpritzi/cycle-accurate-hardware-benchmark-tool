@@ -9,7 +9,10 @@ use core::{
 use benchmark_common::{deserialize, serialize, IncomingMessage, OutgoingMessage};
 use linked_list_allocator::Heap;
 
-use crate::platform::{self, Platform};
+use crate::{
+    modules::Module,
+    platform::{self, Platform},
+};
 
 /// CustomHeap implementation handling the allocations on the heap
 #[global_allocator]
@@ -38,19 +41,19 @@ pub unsafe fn init() -> Result<(), &'static str> {
     let comm = platform::current().get_communication_module();
     comm.init()?;
 
-    if let Some(mut module) = platform::current().get_sha256_module() {
+    if let Some(module) = platform::current().get_sha256_module() {
         if !module.initialized() {
             module.init()?;
         }
     }
 
-    if let Some(mut module) = platform::current().get_aes_module() {
+    if let Some(module) = platform::current().get_aes_module() {
         if !module.initialized() {
             module.init()?;
         }
     }
 
-    if let Some(mut module) = platform::current().get_rng_module() {
+    if let Some(module) = platform::current().get_rng_module() {
         if !module.initialized() {
             module.init()?;
         }

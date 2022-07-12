@@ -57,7 +57,7 @@ pub mod aes {
         pub ciphertext: &'static [u128],
     }
 
-    pub const DATASETS: [AesData; 2] = [
+    pub const DATASETS: [AesData; 3] = [
         AesData {
             key_share0: &KEY_1,
             key_share1: &ZERO_KEY,
@@ -73,6 +73,14 @@ pub mod aes {
             mode: MODE_2,
             plaintext: &PLAINTEXT_2,
             ciphertext: &CIPHERTEXT_2,
+        },
+        AesData {
+            key_share0: &KEY_3,
+            key_share1: &ZERO_KEY,
+            key_length: AESKeyLength::Aes128,
+            mode: MODE_2,
+            plaintext: &PLAINTEXT_2,
+            ciphertext: &CIPHERTEXT_3,
         },
     ];
 
@@ -108,7 +116,7 @@ pub mod aes {
         0x0000_0000,
     ];
     const MODE_1: AESMode = AESMode::CTR {
-        iv: 0xcccc_cccc_cccc_cccc_cccc_cccc_cccc_cccc,
+        iv: 0x0000_1111_2222_3333_4444_5555_6666_7777u128,
     };
     const MODE_2: AESMode = AESMode::CTR {
         iv: 0xfb12_60c5_8b69_93a7_b8c7_7c6e_464a_a903u128,
@@ -151,6 +159,21 @@ pub mod aes {
         0xbaedb76067736877ac26e465251f1c3a,
         0xfb7511bf323f8851ee66e9c253a07f02,
         0x9255ff0a9b062e8759bd262ee56526bd,
+    ];
+
+    /// TODO: Precompute using openssl crate
+    /// Precomputed
+    /// with the following configuration:
+    /// - key_e & zero_key
+    /// - aes128
+    /// - mode_2
+    /// - plaintext_2
+    const CIPHERTEXT_3: [u128; 5] = [
+        216204826054460043807303989113819840591,
+        269976258416088726766727736957780409183,
+        34556971530398279208475813519663588863,
+        131440332510047834340741114835849683819,
+        70932358512670535611769148021203691653,
     ];
 }
 

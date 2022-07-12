@@ -1,17 +1,17 @@
 use core::arch::global_asm;
 
-use crate::{modules::ModuleRef, println};
+use crate::println;
 
 use super::Platform;
 
 #[path = "../../modules/opentitan_aes.rs"]
-mod opentitan_aes;
+pub mod opentitan_aes;
 #[path = "../../modules/opentitan_csrng.rs"]
-mod opentitan_csrng;
+pub mod opentitan_csrng;
 #[path = "../../modules/opentitan_hmac.rs"]
-mod opentitan_hmac;
+pub mod opentitan_hmac;
 #[path = "../../modules/opentitan_uart.rs"]
-mod opentitan_uart;
+pub mod opentitan_uart;
 
 // Opentitan requires a manifest and custom interrupt vector,
 // these are realized in ibex_start_XXX.S and included here.
@@ -64,15 +64,15 @@ impl Platform for EarlGreyPlatform {
         }
     }
 
-    fn get_sha256_module(&self) -> Option<ModuleRef<dyn crate::modules::SHA256Module>> {
-        unsafe { Some(ModuleRef::new(&mut HMAC)) }
+    fn get_sha256_module(&self) -> Option<&'static mut opentitan_hmac::OpentitanHMAC> {
+        unsafe { Some(&mut HMAC) }
     }
 
-    fn get_aes_module(&self) -> Option<ModuleRef<dyn crate::modules::AESModule>> {
-        unsafe { Some(ModuleRef::new(&mut AES)) }
+    fn get_aes_module(&self) -> Option<&'static mut opentitan_aes::OpentitanAES> {
+        unsafe { Some(&mut AES) }
     }
 
-    fn get_rng_module(&self) -> Option<ModuleRef<dyn crate::modules::RNGModule>> {
-        unsafe { Some(ModuleRef::new(&mut CSRNG)) }
+    fn get_rng_module(&self) -> Option<&'static mut opentitan_csrng::OpentitanCSRNG> {
+        unsafe { Some(&mut CSRNG) }
     }
 }

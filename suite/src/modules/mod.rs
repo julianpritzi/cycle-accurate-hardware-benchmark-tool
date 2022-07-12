@@ -112,6 +112,8 @@ pub enum AESOperation {
     Decrypt,
 }
 
+type AESStatus = u32;
+
 /// Module for performing AES en- and decryption
 pub trait AESModule: Module {
     /// Setup the AESModule with the provided configuration.
@@ -142,9 +144,11 @@ pub trait AESModule: Module {
 
     fn wait_for_input_ready(&self);
 
-    fn wait_for_output(&self);
+    fn wait_for_output(&self) -> AESStatus;
 
-    fn wait_for_manual_output(&self);
+    fn wait_for_manual_output(&self) -> AESStatus;
+
+    fn check_if_output_ready(&self, status: AESStatus) -> bool;
 
     /// # Safety
     ///

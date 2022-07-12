@@ -1,9 +1,5 @@
-use crate::modules::{AESModule, CommunicationModule, ModuleRef, RNGModule, SHA256Module};
+use crate::modules::CommunicationModule;
 
-#[cfg(any(
-    feature = "platform_verilator_earlgrey",
-    feature = "platform_nexysvideo_earlgrey"
-))]
 mod earlgrey;
 #[cfg(feature = "platform_qemu_virt")]
 mod virt;
@@ -36,18 +32,18 @@ pub trait Platform {
     ///  - calling the function more than once might invalidate previous references
     unsafe fn get_communication_module(&self) -> &'static mut dyn CommunicationModule;
 
-    /// Returns the platforms SHA256 module if one is present.
-    fn get_sha256_module(&self) -> Option<ModuleRef<dyn SHA256Module>> {
+    /// Returns the opentitan SHA256 module if one is present.
+    fn get_sha256_module(&self) -> Option<&'static mut earlgrey::opentitan_hmac::OpentitanHMAC> {
         None
     }
 
-    /// Returns the platforms aes module if one is present.
-    fn get_aes_module(&self) -> Option<ModuleRef<dyn AESModule>> {
+    /// Returns the opentitan aes module if one is present.
+    fn get_aes_module(&self) -> Option<&'static mut earlgrey::opentitan_aes::OpentitanAES> {
         None
     }
 
-    /// Returns the platforms aes module if one is present.
-    fn get_rng_module(&self) -> Option<ModuleRef<dyn RNGModule>> {
+    /// Returns the opentitan rng module if one is present.
+    fn get_rng_module(&self) -> Option<&'static mut earlgrey::opentitan_csrng::OpentitanCSRNG> {
         None
     }
 

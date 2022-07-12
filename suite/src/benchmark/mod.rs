@@ -4,7 +4,7 @@ use core::arch::asm;
 
 use self::datasets::{aes::AesData, rng::RngData, sha256::Sha256Data};
 use crate::{
-    modules::AESOperation,
+    modules::{AESModule, AESOperation, RNGModule, SHA256Module},
     platform::{self, Platform},
 };
 use alloc::vec;
@@ -91,13 +91,18 @@ pub fn aes_benchmark_per_block(
 
         for i in 0..block_count {
             unsafe {
+                let data_in = input[i];
+                let data_out = &mut buffer[i];
+
                 let _c1 = get_cycle();
-                aes_module.write_block(input[i]);
+                aes_module.write_block(data_in);
                 let _c2 = get_cycle();
-                aes_module.wait_for_manual_output();
+                let st = aes_module.wait_for_manual_output();
                 let _c3 = get_cycle();
-                aes_module.read_block(&mut buffer[i]);
+                aes_module.read_block(data_out);
                 let _c4 = get_cycle();
+
+                assert!(aes_module.check_if_output_ready(st));
 
                 block_timings.push(AesBlockResult {
                     write_input: _c2 - _c1,
