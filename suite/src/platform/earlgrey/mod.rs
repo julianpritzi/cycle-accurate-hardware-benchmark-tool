@@ -10,6 +10,8 @@ pub mod opentitan_aes;
 pub mod opentitan_csrng;
 #[path = "../../modules/opentitan_hmac.rs"]
 pub mod opentitan_hmac;
+#[path = "../../modules/opentitan_kmac.rs"]
+pub mod opentitan_kmac;
 #[path = "../../modules/opentitan_uart.rs"]
 pub mod opentitan_uart;
 
