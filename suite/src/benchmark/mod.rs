@@ -132,6 +132,58 @@ pub fn aes_benchmark_per_block(
     }
 }
 
+pub fn aes_benchmark_total(data_set: &AesData, operation: AESOperation) -> Option<BenchmarkResult> {
+    if let Some(aes_module) = platform::current().get_aes_module() {
+        let block_count = data_set.plaintext.len();
+        let (input, output) = match operation {
+            AESOperation::Encrypt => (data_set.plaintext, data_set.ciphertext),
+            AESOperation::Decrypt => (data_set.ciphertext, data_set.plaintext),
+        };
+        let mut buffer = vec![0u128; block_count];
+
+        // Benchmarking the Encryption
+        let _init_start = get_cycle();
+        aes_module.init_aes(
+            &data_set.key_length,
+            operation,
+            &data_set.mode,
+            data_set.key_share0,
+            data_set.key_share1,
+            false,
+        );
+        let _init_end = get_cycle();
+
+        let _computation_start = get_cycle();
+        unsafe {
+            aes_module.write_block(input[0]);
+            aes_module.wait_for_input_ready();
+            aes_module.write_block(input[1]);
+
+            for i in 2..block_count {
+                aes_module.wait_for_output();
+                aes_module.read_block(&mut buffer[i - 2]);
+                aes_module.write_block(input[i]);
+            }
+
+            aes_module.wait_for_output();
+            aes_module.read_block(&mut buffer[block_count - 2]);
+            aes_module.wait_for_output();
+            aes_module.read_block(&mut buffer[block_count - 1]);
+        }
+        let _computation_end = get_cycle();
+
+        let _deinit_start = get_cycle();
+        aes_module.deinitialize();
+        let _deinit_end = get_cycle();
+
+        assert_eq!(buffer, output);
+
+        todo!("add return value")
+    } else {
+        None
+    }
+}
+
 pub fn rng_benchmark_total(data_set: &RngData) -> Option<BenchmarkResult> {
     if let Some(rng_module) = platform::current().get_rng_module() {
         let mut random_numbers1 = vec![0; data_set.values.len()];
@@ -220,4 +272,68 @@ pub fn ecdsa_benchmark() -> Option<String> {
     }
     #[allow(unreachable_code)]
     None
+}
+
+pub fn micro_benchmarks() -> Option<BenchmarkResult> {
+    // Measure overhead of a getcycle operation
+    let _get_cycle_overhead_s = get_cycle();
+    let _get_cycle_overhead_e = get_cycle();
+
+    // Measure overhead of a empty inlined function call
+    let _get_cycle_overhead_s = get_cycle();
+    micro_benchmarks::do_nothing();
+    let _get_cycle_overhead_e = get_cycle();
+
+    // Measure overhead of a function returning the single argument
+    let _get_cycle_overhead_s = get_cycle();
+    let x = micro_benchmarks::return_argument(42);
+    let _get_cycle_overhead_e = get_cycle();
+    assert!(x == 42);
+
+    // Measure overhead of a function returning the a value
+    let _get_cycle_overhead_s = get_cycle();
+    let x = micro_benchmarks::return_42();
+    let _get_cycle_overhead_e = get_cycle();
+    assert!(x == 42);
+
+    // Measure overhead of a function writing to u32 buffer
+    let mut x = 0u32;
+    let _get_cycle_overhead_s = get_cycle();
+    micro_benchmarks::write_42u32(&mut x);
+    let _get_cycle_overhead_e = get_cycle();
+    assert!(x == 42);
+
+    // Measure overhead of a function writing to u128 buffer
+    let mut x = 0u128;
+    let _get_cycle_overhead_s = get_cycle();
+    micro_benchmarks::write_42u128(&mut x);
+    let _get_cycle_overhead_e = get_cycle();
+    assert!(x == 42);
+
+    todo!()
+}
+
+mod micro_benchmarks {
+    #[inline]
+    pub fn do_nothing() {}
+
+    #[inline]
+    pub fn return_argument(arg: u32) -> u32 {
+        arg
+    }
+
+    #[inline]
+    pub fn return_42() -> u32 {
+        42
+    }
+
+    #[inline]
+    pub fn write_42u32(arg: &mut u32) {
+        *arg = 42;
+    }
+
+    #[inline]
+    pub fn write_42u128(arg: &mut u128) {
+        *arg = u128::MAX;
+    }
 }
