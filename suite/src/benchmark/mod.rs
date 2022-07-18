@@ -2,7 +2,7 @@ pub mod datasets;
 
 use core::arch::asm;
 
-use self::datasets::{aes::AesData, rng::RngData, sha256::Sha256Data};
+use self::datasets::{aes::AesData, hashing::HashingData, rng::RngData};
 use crate::{
     libs::ecdsa::{
         ecdsa_p256_message_digest_t, ecdsa_p256_private_key_t, ecdsa_p256_public_key_t,
@@ -43,7 +43,7 @@ pub fn get_cycle() -> u64 {
     ((counter_hi as u64) << 32u64) + counter_lo as u64
 }
 
-pub fn sha2_benchmark_total(data_set: &Sha256Data) -> Option<BenchmarkResult> {
+pub fn sha2_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
     if let Some(hmac_module) = platform::current().get_sha256_module() {
         let mut output = [0u32; 8];
 
@@ -56,7 +56,32 @@ pub fn sha2_benchmark_total(data_set: &Sha256Data) -> Option<BenchmarkResult> {
         hmac_module.read_digest(&mut output);
         let cycle4 = get_cycle();
 
-        assert_eq!(&output, data_set.digest);
+        assert_eq!(&output, data_set.sha2_digest);
+
+        Some(BenchmarkResult::SHA2Total {
+            initialization: cycle2 - cycle1,
+            computation: cycle3 - cycle2,
+            reading_output: cycle4 - cycle3,
+        })
+    } else {
+        None
+    }
+}
+
+pub fn sha3_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
+    if let Some(kmac_module) = platform::current().get_sha3_module() {
+        let mut output = [0u32; 8];
+
+        let cycle1 = get_cycle();
+        kmac_module.init_sha256();
+        let cycle2 = get_cycle();
+        kmac_module.write_input(data_set.data);
+        kmac_module.wait_for_completion();
+        let cycle3 = get_cycle();
+        kmac_module.read_digest(&mut output);
+        let cycle4 = get_cycle();
+
+        assert_eq!(&output, data_set.sha3_digest);
 
         Some(BenchmarkResult::SHA2Total {
             initialization: cycle2 - cycle1,
@@ -178,7 +203,11 @@ pub fn aes_benchmark_total(data_set: &AesData, operation: AESOperation) -> Optio
 
         assert_eq!(buffer, output);
 
-        todo!("add return value")
+        Some(BenchmarkResult::AESTotal {
+            initialization: _init_end - _init_start,
+            computation: _computation_end - _computation_start,
+            deinitalization: _deinit_end - _deinit_start,
+        })
     } else {
         None
     }
@@ -217,6 +246,7 @@ pub fn rng_benchmark_total(data_set: &RngData) -> Option<BenchmarkResult> {
 }
 
 /// Runs an example benchmark for the ecdsa library
+#[allow(dead_code)]
 pub fn ecdsa_benchmark() -> Option<String> {
     //#[cfg(any(feature = "platform_nexysvideo_earlgrey"))]
     {
@@ -280,37 +310,44 @@ pub fn micro_benchmarks() -> Option<BenchmarkResult> {
     let _get_cycle_overhead_e = get_cycle();
 
     // Measure overhead of a empty inlined function call
-    let _get_cycle_overhead_s = get_cycle();
+    let _empty_call_overhead_s = get_cycle();
     micro_benchmarks::do_nothing();
-    let _get_cycle_overhead_e = get_cycle();
+    let _empty_call_overhead_e = get_cycle();
 
     // Measure overhead of a function returning the single argument
-    let _get_cycle_overhead_s = get_cycle();
+    let _call_and_return_overhead_s = get_cycle();
     let x = micro_benchmarks::return_argument(42);
-    let _get_cycle_overhead_e = get_cycle();
+    let _call_and_return_overhead_e = get_cycle();
     assert!(x == 42);
 
     // Measure overhead of a function returning the a value
-    let _get_cycle_overhead_s = get_cycle();
+    let _return_only_overhead_s = get_cycle();
     let x = micro_benchmarks::return_42();
-    let _get_cycle_overhead_e = get_cycle();
+    let _return_only_overhead_e = get_cycle();
     assert!(x == 42);
 
     // Measure overhead of a function writing to u32 buffer
     let mut x = 0u32;
-    let _get_cycle_overhead_s = get_cycle();
+    let _write_u32_overhead_s = get_cycle();
     micro_benchmarks::write_42u32(&mut x);
-    let _get_cycle_overhead_e = get_cycle();
+    let _write_u32_overhead_e = get_cycle();
     assert!(x == 42);
 
     // Measure overhead of a function writing to u128 buffer
     let mut x = 0u128;
-    let _get_cycle_overhead_s = get_cycle();
-    micro_benchmarks::write_42u128(&mut x);
-    let _get_cycle_overhead_e = get_cycle();
-    assert!(x == 42);
+    let _write_u128_overhead_s = get_cycle();
+    micro_benchmarks::write_u128(&mut x);
+    let _write_u128_overhead_e = get_cycle();
+    assert!(x == u128::MAX);
 
-    todo!()
+    Some(BenchmarkResult::MicroBenchmarks {
+        get_cycle: _get_cycle_overhead_e - _get_cycle_overhead_s,
+        empty_call: _empty_call_overhead_e - _empty_call_overhead_s,
+        call_and_return: _call_and_return_overhead_e - _call_and_return_overhead_s,
+        return_only: _return_only_overhead_e - _return_only_overhead_s,
+        write_u32: _write_u32_overhead_e - _write_u32_overhead_s,
+        write_u128: _write_u128_overhead_e - _write_u128_overhead_s,
+    })
 }
 
 mod micro_benchmarks {
@@ -333,7 +370,7 @@ mod micro_benchmarks {
     }
 
     #[inline]
-    pub fn write_42u128(arg: &mut u128) {
+    pub fn write_u128(arg: &mut u128) {
         *arg = u128::MAX;
     }
 }

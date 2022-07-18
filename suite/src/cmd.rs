@@ -2,7 +2,10 @@ use alloc::format;
 use benchmark_common::{IncomingMessage, OutgoingMessage, SuiteStatus};
 
 use crate::{
-    benchmark::{aes_benchmark_per_block, datasets, rng_benchmark_total, sha2_benchmark_total},
+    benchmark::{
+        aes_benchmark_per_block, aes_benchmark_total, datasets, micro_benchmarks,
+        rng_benchmark_total, sha2_benchmark_total, sha3_benchmark_total,
+    },
     platform::{self, Platform},
 };
 
@@ -37,6 +40,12 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
                         benchmark_common::AESBenchmarkType::DecryptionPerBlock => {
                             aes_benchmark_per_block(dataset, crate::modules::AESOperation::Decrypt)
                         }
+                        benchmark_common::AESBenchmarkType::EncryptionTotal => {
+                            aes_benchmark_total(dataset, crate::modules::AESOperation::Encrypt)
+                        }
+                        benchmark_common::AESBenchmarkType::DecryptionTotal => {
+                            aes_benchmark_total(dataset, crate::modules::AESOperation::Decrypt)
+                        }
                     }
                 }
                 benchmark_common::BenchmarkInfo::RNGDataSet(id) => {
@@ -50,17 +59,21 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
 
                     rng_benchmark_total(dataset)
                 }
-                benchmark_common::BenchmarkInfo::SHA2DataSet(id) => {
-                    if id > datasets::sha256::DATASETS.len() {
+                benchmark_common::BenchmarkInfo::HashDataSet(bench_type, id) => {
+                    if id > datasets::hashing::DATASETS.len() {
                         return Some(OutgoingMessage::Error(format!(
                             "No rng dataset with id {}",
                             id
                         )));
                     }
-                    let dataset = &datasets::sha256::DATASETS[id];
+                    let dataset = &datasets::hashing::DATASETS[id];
 
-                    sha2_benchmark_total(dataset)
+                    match bench_type {
+                        benchmark_common::HashBenchmarkType::SHA2 => sha2_benchmark_total(dataset),
+                        benchmark_common::HashBenchmarkType::SHA3 => sha3_benchmark_total(dataset),
+                    }
                 }
+                benchmark_common::BenchmarkInfo::MicroBenchmarks => micro_benchmarks(),
             };
 
             Some(OutgoingMessage::BenchmarkResults(result))

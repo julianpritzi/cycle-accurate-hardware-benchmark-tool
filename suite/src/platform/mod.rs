@@ -47,6 +47,10 @@ pub trait Platform {
         None
     }
 
+    fn get_sha3_module(&self) -> Option<&'static mut earlgrey::opentitan_kmac::OpentitanKMAC> {
+        None
+    }
+
     /// Signals the platform that the suite finished executing.
     /// What should happen when this function is called is defined by the platform.
     ///

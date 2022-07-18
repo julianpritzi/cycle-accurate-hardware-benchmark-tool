@@ -40,7 +40,8 @@ pub enum BenchmarkInfo {
     /// Perform the specified type of benchmark with the aes dataset identified by id
     AESDataSet(AESBenchmarkType, usize),
     RNGDataSet(usize),
-    SHA2DataSet(usize),
+    HashDataSet(HashBenchmarkType, usize),
+    MicroBenchmarks,
 }
 
 /// Represents all the possible types of benchmarks for the AES module
@@ -48,6 +49,15 @@ pub enum BenchmarkInfo {
 pub enum AESBenchmarkType {
     EncryptionPerBlock,
     DecryptionPerBlock,
+    EncryptionTotal,
+    DecryptionTotal,
+}
+
+/// Represents all the possible types of benchmarks for the hashing module
+#[derive(Debug, Serialize, Deserialize)]
+pub enum HashBenchmarkType {
+    SHA2,
+    SHA3,
 }
 
 /// Messages sent from the Suite to the CLI
@@ -88,6 +98,19 @@ pub enum BenchmarkResult {
         initialization: u64,
         blocks: Vec<AesBlockResult>,
         deinitalization: u64,
+    },
+    AESTotal {
+        initialization: u64,
+        computation: u64,
+        deinitalization: u64,
+    },
+    MicroBenchmarks {
+        get_cycle: u64,
+        empty_call: u64,
+        call_and_return: u64,
+        return_only: u64,
+        write_u32: u64,
+        write_u128: u64,
     },
 }
 

@@ -32,6 +32,8 @@ static mut UART0: opentitan_uart::OpentitanUart =
     unsafe { opentitan_uart::OpentitanUart::new(0x4000_0000 as *mut u8, 115200, 25 * 100 * 1000) };
 static mut HMAC: opentitan_hmac::OpentitanHMAC =
     unsafe { opentitan_hmac::OpentitanHMAC::new(0x4111_0000 as *mut u8) };
+static mut KMAC: opentitan_kmac::OpentitanKMAC =
+    unsafe { opentitan_kmac::OpentitanKMAC::new(0x41120000 as *mut u8) };
 static mut AES: opentitan_aes::OpentitanAES =
     unsafe { opentitan_aes::OpentitanAES::new(0x4110_0000 as *mut u8) };
 static mut CSRNG: opentitan_csrng::OpentitanCSRNG =
@@ -76,5 +78,9 @@ impl Platform for EarlGreyPlatform {
 
     fn get_rng_module(&self) -> Option<&'static mut opentitan_csrng::OpentitanCSRNG> {
         unsafe { Some(&mut CSRNG) }
+    }
+
+    fn get_sha3_module(&self) -> Option<&'static mut self::opentitan_kmac::OpentitanKMAC> {
+        unsafe { Some(&mut KMAC) }
     }
 }

@@ -1,21 +1,24 @@
 #![allow(dead_code)]
 /// Contains predefined datasets with precomputed results
 
-pub mod sha256 {
+pub mod hashing {
     /// Contains some data and a valid sha256 digest of the data
-    pub struct Sha256Data {
+    pub struct HashingData {
         pub data: &'static [u32],
-        pub digest: &'static [u32; 8],
+        pub sha2_digest: &'static [u32; 8],
+        pub sha3_digest: &'static [u32; 8],
     }
 
-    pub const DATASETS: [Sha256Data; 2] = [
-        Sha256Data {
+    pub const DATASETS: [HashingData; 2] = [
+        HashingData {
             data: &DATA_1,
-            digest: &DIGEST_1,
+            sha2_digest: &SHA2_DIGEST_1,
+            sha3_digest: &SHA3_DIGEST_1,
         },
-        Sha256Data {
+        HashingData {
             data: &DATA_2,
-            digest: &DIGEST_2,
+            sha2_digest: &SHA2_DIGEST_2,
+            sha3_digest: &SHA3_DIGEST_2,
         },
     ];
 
@@ -34,14 +37,24 @@ pub mod sha256 {
     const DATA_2: [u32; 1] = [0];
 
     // Precomputed value by sha2 crate from data_1
-    const DIGEST_1: [u32; 8] = [
+    const SHA2_DIGEST_1: [u32; 8] = [
         0xa24ef743, 0xed238e92, 0x8f5fe495, 0x7959a1fa, 0x06b1d250, 0x147ed98d, 0xd817e3b2,
         0xb32854ae,
     ];
+    // Precomputed value from data_1
+    const SHA3_DIGEST_1: [u32; 8] = [
+        3756644571, 1975506795, 2555459499, 664552322, 980307743, 1450163967, 3351986273,
+        2331392153,
+    ];
     // Precomputed value by sha2 crate from data_2
-    const DIGEST_2: [u32; 8] = [
+    const SHA2_DIGEST_2: [u32; 8] = [
         0xdf3f6198, 0x04a92fdb, 0x4057192d, 0xc43dd748, 0xea778adc, 0x52bc498c, 0xe80524c0,
         0x14b81119,
+    ];
+    // Precomputed value from data_2
+    const SHA3_DIGEST_2: [u32; 8] = [
+        2415330617, 3123429468, 2503648411, 3151588070, 3866647132, 3842186346, 4255535442,
+        3338528080,
     ];
 }
 
