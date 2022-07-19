@@ -29,11 +29,19 @@ pub fn run_cmd(cmd: IncomingMessage) -> OutgoingMessage {
                     let dataset = &datasets::aes::DATASETS[id];
 
                     match bench_type {
-                        benchmark_common::AESBenchmarkType::EncryptionPerBlock => {
-                            aes_benchmark_per_block(dataset, crate::modules::AESOperation::Encrypt)
+                        benchmark_common::AESBenchmarkType::EncryptionPerBlock(tight) => {
+                            aes_benchmark_per_block(
+                                dataset,
+                                crate::modules::AESOperation::Encrypt,
+                                tight,
+                            )
                         }
-                        benchmark_common::AESBenchmarkType::DecryptionPerBlock => {
-                            aes_benchmark_per_block(dataset, crate::modules::AESOperation::Decrypt)
+                        benchmark_common::AESBenchmarkType::DecryptionPerBlock(tight) => {
+                            aes_benchmark_per_block(
+                                dataset,
+                                crate::modules::AESOperation::Decrypt,
+                                tight,
+                            )
                         }
                         benchmark_common::AESBenchmarkType::EncryptionTotal => {
                             aes_benchmark_total(dataset, crate::modules::AESOperation::Encrypt)
