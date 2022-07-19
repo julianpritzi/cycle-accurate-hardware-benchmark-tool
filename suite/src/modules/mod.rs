@@ -124,7 +124,7 @@ pub trait AESModule: Module {
     /// * `key_share1` - second share of the key
     /// * `manual` - true if the aes module does not start computing before `wait_for_manual_output` is called
     fn init_aes(
-        &self,
+        &mut self,
         key_len: &AESKeyLength,
         operation: AESOperation,
         mode: &AESMode,
@@ -144,14 +144,13 @@ pub trait AESModule: Module {
     fn wait_for_input_ready(&self);
 
     /// Waits until the output can be read
-    ///
-    /// Returns a status value when done
-    fn wait_for_output(&self) -> AESStatus;
+    fn wait_for_output(&self);
 
-    /// Triggers the computation and then waits until the output can be read
-    ///
-    /// Returns a status value when done
-    fn wait_for_manual_output(&self) -> AESStatus;
+    /// Returns a status value
+    fn read_status(&self) -> AESStatus;
+
+    /// Triggers the computation
+    fn trigger_start(&self);
 
     /// Returns true if a status value signals that the output was ready
     fn check_if_output_ready(&self, status: AESStatus) -> bool;
@@ -215,7 +214,7 @@ pub mod empty {
     }
     impl super::AESModule for EmptyModule {
         fn init_aes(
-            &self,
+            &mut self,
             _: &super::AESKeyLength,
             _: super::AESOperation,
             _: &super::AESMode,
@@ -234,11 +233,11 @@ pub mod empty {
             unreachable!()
         }
 
-        fn wait_for_output(&self) -> super::AESStatus {
+        fn wait_for_output(&self) {
             unreachable!()
         }
 
-        fn wait_for_manual_output(&self) -> super::AESStatus {
+        fn trigger_start(&self) {
             unreachable!()
         }
 
@@ -251,6 +250,10 @@ pub mod empty {
         }
 
         fn deinitialize(&self) {
+            unreachable!()
+        }
+
+        fn read_status(&self) -> super::AESStatus {
             unreachable!()
         }
     }

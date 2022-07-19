@@ -4,7 +4,8 @@ use core::arch::asm;
 
 use self::datasets::{aes::AesData, hashing::HashingData, rng::RngData};
 use crate::{
-    modules::{AESModule, AESOperation, HashingModule, RNGModule},
+    benchmark::datasets::aes,
+    modules::{AESKeyLength, AESModule, AESOperation, HashingModule, RNGModule},
     platform::{self, Platform},
 };
 use alloc::vec::Vec;
@@ -95,6 +96,7 @@ pub fn sha3_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
 pub fn aes_benchmark_per_block(
     data_set: &AesData,
     operation: AESOperation,
+    tight_implementations: bool,
 ) -> Option<BenchmarkResult> {
     if let Some(aes_module) = platform::current().get_aes_module() {
         let block_count = data_set.plaintext.len();
@@ -118,25 +120,16 @@ pub fn aes_benchmark_per_block(
         let _init_end = get_cycle();
 
         for i in 0..block_count {
-            unsafe {
-                let data_in = input[i];
-                let data_out = &mut buffer[i];
-
-                let _c1 = get_cycle();
-                aes_module.write_block(data_in);
-                let _c2 = get_cycle();
-                let st = aes_module.wait_for_manual_output();
-                let _c3 = get_cycle();
-                aes_module.read_block(data_out);
-                let _c4 = get_cycle();
-
-                assert!(aes_module.check_if_output_ready(st));
-
-                block_timings.push(AesBlockResult {
-                    write_input: _c2 - _c1,
-                    computation: _c3 - _c2,
-                    read_output: _c4 - _c3,
-                })
+            if tight_implementations {
+                bench_aes_block_tight(
+                    input[i],
+                    &mut buffer[i],
+                    aes_module,
+                    &mut block_timings,
+                    &data_set.key_length,
+                );
+            } else {
+                bench_aes_block_normal(input[i], &mut buffer[i], aes_module, &mut block_timings);
             }
         }
 
@@ -153,6 +146,131 @@ pub fn aes_benchmark_per_block(
         })
     } else {
         None
+    }
+}
+
+pub fn bench_aes_block_normal(
+    data_in: u128,
+    data_out: &mut u128,
+    aes_module: &mut platform::module_types::AESModule,
+    block_timings: &mut Vec<AesBlockResult>,
+) {
+    unsafe {
+        let _c1 = get_cycle();
+        aes_module.write_block(data_in);
+        let _c2 = get_cycle();
+        aes_module.trigger_start();
+        aes_module.wait_for_output();
+        let _c3 = get_cycle();
+        aes_module.read_block(data_out);
+        let _c4 = get_cycle();
+
+        block_timings.push(AesBlockResult {
+            write_input: _c2 - _c1,
+            computation: _c3 - _c2,
+            read_output: _c4 - _c3,
+        })
+    }
+}
+
+/// Use predetermined snippets to wait an exact number of cycles
+/// Reading the output now should return a status that signals the output is ready, this will be verified later
+pub fn bench_aes_block_tight(
+    data_in: u128,
+    data_out: &mut u128,
+    aes_module: &mut platform::module_types::AESModule,
+    block_timings: &mut Vec<AesBlockResult>,
+    key_len: &AESKeyLength,
+) {
+    match key_len {
+        AESKeyLength::Aes128 => unsafe {
+            let _c1 = get_cycle();
+            aes_module.write_block(data_in);
+            let _c2 = get_cycle();
+            aes_module.trigger_start();
+            asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+            #[cfg(feature = "opentitan_aes_masking")]
+            {
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop");
+            }
+            let status = aes_module.read_status();
+            let _c3 = get_cycle();
+            aes_module.read_block(data_out);
+            let _c4 = get_cycle();
+
+            // Verify that the output was signalled as being ready
+            assert!(aes_module.check_if_output_ready(status));
+
+            block_timings.push(AesBlockResult {
+                write_input: _c2 - _c1,
+                computation: _c3 - _c2,
+                read_output: _c4 - _c3,
+            })
+        },
+        AESKeyLength::Aes192 => unsafe {
+            let _c1 = get_cycle();
+            aes_module.write_block(data_in);
+            let _c2 = get_cycle();
+            aes_module.trigger_start();
+            asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+            #[cfg(feature = "opentitan_aes_masking")]
+            {
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop");
+            }
+            let status = aes_module.read_status();
+            let _c3 = get_cycle();
+            aes_module.read_block(data_out);
+            let _c4 = get_cycle();
+
+            // Verify that the output was signalled as being ready
+            assert!(aes_module.check_if_output_ready(status));
+
+            block_timings.push(AesBlockResult {
+                write_input: _c2 - _c1,
+                computation: _c3 - _c2,
+                read_output: _c4 - _c3,
+            })
+        },
+        AESKeyLength::Aes256 => unsafe {
+            let _c1 = get_cycle();
+            aes_module.write_block(data_in);
+            let _c2 = get_cycle();
+            aes_module.trigger_start();
+            asm!(
+                "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop"
+            );
+            #[cfg(feature = "opentitan_aes_masking")]
+            {
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+                asm!("nop", "nop", "nop", "nop", "nop", "nop");
+            }
+            let status = aes_module.read_status();
+            let _c3 = get_cycle();
+            aes_module.read_block(data_out);
+            let _c4 = get_cycle();
+
+            // Verify that the output was signalled as being ready
+            assert!(aes_module.check_if_output_ready(status));
+
+            block_timings.push(AesBlockResult {
+                write_input: _c2 - _c1,
+                computation: _c3 - _c2,
+                read_output: _c4 - _c3,
+            })
+        },
     }
 }
 

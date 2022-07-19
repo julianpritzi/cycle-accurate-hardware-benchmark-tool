@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+use core::arch::asm;
+
 use crate::modules::{AESKeyLength, AESMode, AESModule, AESOperation, Module};
 use bitflags::bitflags;
 
@@ -83,6 +85,7 @@ const AES_STATUS_OFFSET: usize = 0x7c;
 pub struct OpentitanAES {
     initialized: bool,
     base_address: *mut u8,
+    key_len: AESKeyLength,
 }
 
 impl OpentitanAES {
@@ -99,6 +102,7 @@ impl OpentitanAES {
         OpentitanAES {
             initialized: false,
             base_address,
+            key_len: AESKeyLength::Aes128,
         }
     }
 
@@ -183,7 +187,7 @@ impl Module for OpentitanAES {
 impl AESModule for OpentitanAES {
     #[inline]
     fn init_aes(
-        &self,
+        &mut self,
         key_len: &AESKeyLength,
         operation: AESOperation,
         mode: &AESMode,
@@ -247,19 +251,14 @@ impl AESModule for OpentitanAES {
     }
 
     #[inline(always)]
-    fn wait_for_output(&self) -> u32 {
-        unsafe {
-            self._wait_for(AesSTATUS::OUTPUT_VALID);
-            self._status_reg().read_volatile()
-        }
+    fn wait_for_output(&self) {
+        unsafe { self._wait_for(AesSTATUS::OUTPUT_VALID) }
     }
 
     #[inline(always)]
-    fn wait_for_manual_output(&self) -> u32 {
+    fn trigger_start(&self) {
         unsafe {
             self._trigger_reg().write_volatile(AesTRIGGER::START.bits());
-            self._wait_for(AesSTATUS::OUTPUT_VALID);
-            self._status_reg().read_volatile()
         }
     }
 
@@ -270,6 +269,11 @@ impl AESModule for OpentitanAES {
 
     fn check_if_output_ready(&self, status: u32) -> bool {
         status & AesSTATUS::OUTPUT_VALID.bits() > 0
+    }
+
+    #[inline(always)]
+    fn read_status(&self) -> u32 {
+        unsafe { self._status_reg().read_volatile() }
     }
 }
 

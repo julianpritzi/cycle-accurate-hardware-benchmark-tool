@@ -50,8 +50,10 @@ pub enum BenchmarkInfo {
 /// Represents all the possible types of benchmarks for the AES module
 #[derive(Debug, Serialize, Deserialize)]
 pub enum AESBenchmarkType {
-    EncryptionPerBlock,
-    DecryptionPerBlock,
+    // Perform a per block encryption benchmark, if true use tighter waiting for more accurate results.
+    EncryptionPerBlock(bool),
+    // Perform a per block decryption benchmark, if true use tighter waiting for more accurate results.
+    DecryptionPerBlock(bool),
     EncryptionTotal,
     DecryptionTotal,
 }
