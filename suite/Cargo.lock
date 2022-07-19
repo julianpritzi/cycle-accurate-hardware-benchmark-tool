@@ -196,6 +196,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73b4b750c782965c211b42f022f59af1fbceabdd026623714f104152f1ec149f"
 
 [[package]]
+name = "seq-macro"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70d9841243dbc9928f5fed7946d2862292eebd823d96e13e556924d3db0120d2"
+
+[[package]]
 name = "serde"
 version = "1.0.137"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -235,6 +241,7 @@ dependencies = [
  "linked_list_allocator",
  "riscv",
  "riscv-rt",
+ "seq-macro",
 ]
 
 [[package]]

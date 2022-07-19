@@ -41,6 +41,8 @@ pub enum BenchmarkInfo {
     AESDataSet(AESBenchmarkType, usize),
     /// Perform an rng benchmark using the dataset with the provided id
     RNGDataSet(usize),
+    /// Perform an rng benchmark using true number generation, with provided number of data blocks
+    RNGTrueRandom(usize),
     /// Perform a hashing benchmark of the specified type using the dataset with the provided id
     HashDataSet(HashBenchmarkType, usize),
     /// Perform a set of microbenchmarks
@@ -94,11 +96,16 @@ pub enum BenchmarkResult {
         computation: u64,
         reading_output: u64,
     },
-    RNGTotal {
+    RNGTotalSeeded {
         seeded_initialization: u64,
-        seeded_generation: u64,
+        seeded_generation: Vec<u64>,
+    },
+    RNGTotalTrueRandom {
         unseeded_initialization: u64,
-        unseeded_generation: u64,
+        unseeded_generation: Vec<u64>,
+        unseeded_wait_initialization: u64,
+        unseeded_wait_generation: Vec<u64>,
+        time_to_seed_with_entropy: u64,
     },
     ECDSATotal {
         signing: u64,

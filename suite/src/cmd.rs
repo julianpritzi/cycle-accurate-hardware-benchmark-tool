@@ -4,7 +4,8 @@ use benchmark_common::{IncomingMessage, OutgoingMessage, SuiteStatus};
 use crate::{
     benchmark::{
         aes_benchmark_per_block, aes_benchmark_total, datasets, micro_benchmarks,
-        rng_benchmark_total, sha2_benchmark_total, sha3_benchmark_total,
+        rng_benchmark_total_seeded, rng_benchmark_true_random, sha2_benchmark_total,
+        sha3_benchmark_total,
     },
     platform::{self, Platform},
 };
@@ -57,7 +58,10 @@ pub fn run_cmd(cmd: IncomingMessage) -> OutgoingMessage {
                     }
                     let dataset = &datasets::rng::DATASETS[id];
 
-                    rng_benchmark_total(dataset)
+                    rng_benchmark_total_seeded(dataset)
+                }
+                benchmark_common::BenchmarkInfo::RNGTrueRandom(blocks) => {
+                    rng_benchmark_true_random(blocks)
                 }
                 benchmark_common::BenchmarkInfo::HashDataSet(bench_type, id) => {
                     if id > datasets::hashing::DATASETS.len() {

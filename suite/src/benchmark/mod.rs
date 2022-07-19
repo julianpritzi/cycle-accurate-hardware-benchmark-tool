@@ -10,6 +10,7 @@ use crate::{
 use alloc::vec::Vec;
 use alloc::{string::String, vec};
 use benchmark_common::{AesBlockResult, BenchmarkResult};
+use seq_macro::seq;
 
 /// Returns the machine cycle counter
 ///
@@ -187,14 +188,10 @@ pub fn bench_aes_block_tight(
             aes_module.write_block(data_in);
             let _c2 = get_cycle();
             aes_module.trigger_start();
-            asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+            seq!(N in 0..8 { asm!("nop"); });
             #[cfg(feature = "opentitan_aes_masking")]
             {
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop");
+                seq!(N in 0..44 { asm!("nop"); });
             }
             let status = aes_module.read_status();
             let _c3 = get_cycle();
@@ -215,15 +212,10 @@ pub fn bench_aes_block_tight(
             aes_module.write_block(data_in);
             let _c2 = get_cycle();
             aes_module.trigger_start();
-            asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
+            seq!(N in 0..10 { asm!("nop"); });
             #[cfg(feature = "opentitan_aes_masking")]
             {
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop");
+                seq!(N in 0..52 { asm!("nop"); });
             }
             let status = aes_module.read_status();
             let _c3 = get_cycle();
@@ -244,17 +236,10 @@ pub fn bench_aes_block_tight(
             aes_module.write_block(data_in);
             let _c2 = get_cycle();
             aes_module.trigger_start();
-            asm!(
-                "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop"
-            );
+            seq!(N in 0..12 { asm!("nop"); });
             #[cfg(feature = "opentitan_aes_masking")]
             {
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop", "nop");
-                asm!("nop", "nop", "nop", "nop", "nop", "nop");
+                seq!(N in 0..56 { asm!("nop"); });
             }
             let status = aes_module.read_status();
             let _c3 = get_cycle();
@@ -331,32 +316,76 @@ pub fn aes_benchmark_total(data_set: &AesData, operation: AESOperation) -> Optio
 }
 
 /// Performs an rng benchmark using the provided dataset and operation
-pub fn rng_benchmark_total(data_set: &RngData) -> Option<BenchmarkResult> {
+pub fn rng_benchmark_total_seeded(data_set: &RngData) -> Option<BenchmarkResult> {
     if let Some(rng_module) = platform::current().get_rng_module() {
         let mut random_numbers1 = vec![0; data_set.values.len()];
-        let mut random_numbers2 = vec![0; data_set.values.len()];
+        let mut seeded_blocks: Vec<u64> = Vec::with_capacity(data_set.values.len());
 
-        let cycle1 = get_cycle();
+        let seeded_init_s = get_cycle();
         rng_module.init_rng(Some(data_set.seed));
-        let cycle2 = get_cycle();
+        let seeded_init_e = get_cycle();
         for num in &mut random_numbers1[..] {
+            let c1 = get_cycle();
             *num = rng_module.generate();
+            let c2 = get_cycle();
+
+            seeded_blocks.push(c2 - c1);
         }
-        let cycle3 = get_cycle();
-        rng_module.init_rng(None);
-        let cycle4 = get_cycle();
-        for num in &mut random_numbers2[..] {
-            *num = rng_module.generate();
-        }
-        let cycle5 = get_cycle();
 
         assert_eq!(random_numbers1, data_set.values);
 
-        Some(BenchmarkResult::RNGTotal {
-            seeded_initialization: cycle2 - cycle1,
-            seeded_generation: cycle3 - cycle2,
-            unseeded_initialization: cycle4 - cycle3,
-            unseeded_generation: cycle5 - cycle4,
+        Some(BenchmarkResult::RNGTotalSeeded {
+            seeded_initialization: seeded_init_e - seeded_init_s,
+            seeded_generation: seeded_blocks,
+        })
+    } else {
+        None
+    }
+}
+
+/// Performs an rng benchmark using the provided dataset and operation
+pub fn rng_benchmark_true_random(blocks: usize) -> Option<BenchmarkResult> {
+    if let Some(rng_module) = platform::current().get_rng_module() {
+        let mut unseeded_blocks: Vec<u64> = Vec::with_capacity(blocks);
+        let mut unseeded_wait_blocks: Vec<u64> = Vec::with_capacity(blocks);
+
+        let unseeded_init_s = get_cycle();
+        rng_module.init_rng(None);
+        let unseeded_init_e = get_cycle();
+        for _ in 0..blocks {
+            let c1 = get_cycle();
+            rng_module.generate();
+            let c2 = get_cycle();
+
+            unseeded_blocks.push(c2 - c1);
+        }
+
+        let unseeded_wait_init_s = get_cycle();
+        rng_module.init_rng(None);
+        let unseeded_wait_init_e = get_cycle();
+        for _ in 0..blocks {
+            let c1 = get_cycle();
+            rng_module.generate();
+            let c2 = get_cycle();
+
+            unseeded_wait_blocks.push(c2 - c1);
+        }
+
+        let empty_seed = vec![];
+        let seed_time1 = get_cycle();
+        rng_module.init_rng(Some(&empty_seed));
+        rng_module.generate();
+        let seed_time2 = get_cycle();
+        rng_module.init_rng(None);
+        rng_module.generate();
+        let seed_time3 = get_cycle();
+
+        Some(BenchmarkResult::RNGTotalTrueRandom {
+            unseeded_initialization: unseeded_init_e - unseeded_init_s,
+            unseeded_generation: unseeded_blocks,
+            unseeded_wait_initialization: unseeded_wait_init_e - unseeded_wait_init_s,
+            unseeded_wait_generation: unseeded_wait_blocks,
+            time_to_seed_with_entropy: (seed_time3 - seed_time2) - (seed_time2 - seed_time1),
         })
     } else {
         None
