@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use core::arch::asm;
 
 use crate::modules::{AESKeyLength, AESMode, AESModule, AESOperation, Module};
 use bitflags::bitflags;

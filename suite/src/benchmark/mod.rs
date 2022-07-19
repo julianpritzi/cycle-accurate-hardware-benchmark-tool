@@ -4,7 +4,6 @@ use core::arch::asm;
 
 use self::datasets::{aes::AesData, hashing::HashingData, rng::RngData};
 use crate::{
-    benchmark::datasets::aes,
     modules::{AESKeyLength, AESModule, AESOperation, HashingModule, RNGModule},
     platform::{self, Platform},
 };
