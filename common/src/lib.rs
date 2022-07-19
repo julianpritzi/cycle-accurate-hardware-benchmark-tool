@@ -99,13 +99,14 @@ pub enum BenchmarkResult {
     RNGTotalSeeded {
         seeded_initialization: u64,
         seeded_generation: Vec<u64>,
+        seeded_wait_initialization: u64,
+        seeded_wait_generation: Vec<u64>,
     },
     RNGTotalTrueRandom {
         unseeded_initialization: u64,
         unseeded_generation: Vec<u64>,
         unseeded_wait_initialization: u64,
         unseeded_wait_generation: Vec<u64>,
-        time_to_seed_with_entropy: u64,
     },
     ECDSATotal {
         signing: u64,

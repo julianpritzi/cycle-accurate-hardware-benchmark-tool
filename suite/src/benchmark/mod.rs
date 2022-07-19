@@ -319,7 +319,9 @@ pub fn aes_benchmark_total(data_set: &AesData, operation: AESOperation) -> Optio
 pub fn rng_benchmark_total_seeded(data_set: &RngData) -> Option<BenchmarkResult> {
     if let Some(rng_module) = platform::current().get_rng_module() {
         let mut random_numbers1 = vec![0; data_set.values.len()];
+        let mut random_numbers2 = vec![0; data_set.values.len()];
         let mut seeded_blocks: Vec<u64> = Vec::with_capacity(data_set.values.len());
+        let mut seeded_wait_blocks: Vec<u64> = Vec::with_capacity(data_set.values.len());
 
         let seeded_init_s = get_cycle();
         rng_module.init_rng(Some(data_set.seed));
@@ -332,29 +334,46 @@ pub fn rng_benchmark_total_seeded(data_set: &RngData) -> Option<BenchmarkResult>
             seeded_blocks.push(c2 - c1);
         }
 
+        let seeded_wait_init_s = get_cycle();
+        rng_module.init_rng(Some(data_set.seed));
+        let seeded_wait_init_e = get_cycle();
+        unsafe {
+            seq!(N in 0..53 { asm!("nop"); });
+        }
+        for num in &mut random_numbers2[..] {
+            let c1 = get_cycle();
+            *num = rng_module.generate();
+            let c2 = get_cycle();
+
+            seeded_wait_blocks.push(c2 - c1);
+        }
+
         assert_eq!(random_numbers1, data_set.values);
 
         Some(BenchmarkResult::RNGTotalSeeded {
             seeded_initialization: seeded_init_e - seeded_init_s,
             seeded_generation: seeded_blocks,
+            seeded_wait_initialization: seeded_wait_init_e - seeded_wait_init_s,
+            seeded_wait_generation: seeded_wait_blocks,
         })
     } else {
         None
     }
 }
 
-/// Performs an rng benchmark using the provided dataset and operation
+/// Performs an rng benchmark using entropy seed
 pub fn rng_benchmark_true_random(blocks: usize) -> Option<BenchmarkResult> {
     if let Some(rng_module) = platform::current().get_rng_module() {
+        let mut random_numbers = vec![0; blocks];
         let mut unseeded_blocks: Vec<u64> = Vec::with_capacity(blocks);
         let mut unseeded_wait_blocks: Vec<u64> = Vec::with_capacity(blocks);
 
         let unseeded_init_s = get_cycle();
         rng_module.init_rng(None);
         let unseeded_init_e = get_cycle();
-        for _ in 0..blocks {
+        for num in &mut random_numbers[..] {
             let c1 = get_cycle();
-            rng_module.generate();
+            *num = rng_module.generate();
             let c2 = get_cycle();
 
             unseeded_blocks.push(c2 - c1);
@@ -363,29 +382,22 @@ pub fn rng_benchmark_true_random(blocks: usize) -> Option<BenchmarkResult> {
         let unseeded_wait_init_s = get_cycle();
         rng_module.init_rng(None);
         let unseeded_wait_init_e = get_cycle();
-        for _ in 0..blocks {
+        unsafe {
+            seq!(N in 0..53 { asm!("nop"); });
+        }
+        for num in &mut random_numbers[..] {
             let c1 = get_cycle();
-            rng_module.generate();
+            *num = rng_module.generate();
             let c2 = get_cycle();
 
             unseeded_wait_blocks.push(c2 - c1);
         }
-
-        let empty_seed = vec![];
-        let seed_time1 = get_cycle();
-        rng_module.init_rng(Some(&empty_seed));
-        rng_module.generate();
-        let seed_time2 = get_cycle();
-        rng_module.init_rng(None);
-        rng_module.generate();
-        let seed_time3 = get_cycle();
 
         Some(BenchmarkResult::RNGTotalTrueRandom {
             unseeded_initialization: unseeded_init_e - unseeded_init_s,
             unseeded_generation: unseeded_blocks,
             unseeded_wait_initialization: unseeded_wait_init_e - unseeded_wait_init_s,
             unseeded_wait_generation: unseeded_wait_blocks,
-            time_to_seed_with_entropy: (seed_time3 - seed_time2) - (seed_time2 - seed_time1),
         })
     } else {
         None
