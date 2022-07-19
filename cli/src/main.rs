@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::{ffi::OsString, path::PathBuf};
+use std::{ffi::OsString, fs, path::PathBuf};
 
 #[derive(Parser)]
 struct Args {
@@ -24,9 +24,17 @@ fn main() {
 
     for file in args.files {
         if args.raw {
-            cli::benchmark_raw_file(&args.tty, file);
+            fs::write(
+                file.with_extension("result"),
+                cli::benchmark_raw_file(&args.tty, file),
+            )
+            .expect("Failed to write output file");
         } else {
-            cli::benchmark_file(&args.tty, file);
+            fs::write(
+                file.with_extension("result"),
+                cli::benchmark_raw_file(&args.tty, file),
+            )
+            .expect("Failed to write output file");
         }
     }
 }

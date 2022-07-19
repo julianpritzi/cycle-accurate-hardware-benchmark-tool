@@ -14,22 +14,17 @@ use crate::{
 /// # Arguments
 ///
 /// * `cmd` - the message to produce a response to
-pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
+pub fn run_cmd(cmd: IncomingMessage) -> OutgoingMessage {
     match cmd {
         IncomingMessage::Suspend(value) => platform::current().suspend(value),
-        IncomingMessage::Invalid(msg) => {
-            Some(OutgoingMessage::Error(format!("Invalid message: {msg}")))
-        }
-        IncomingMessage::Done => Some(OutgoingMessage::Status(SuiteStatus::Done)),
-        IncomingMessage::GetStatus => Some(OutgoingMessage::Status(SuiteStatus::Ready)),
+        IncomingMessage::Invalid(msg) => OutgoingMessage::Error(format!("Invalid message: {msg}")),
+        IncomingMessage::Done => OutgoingMessage::Status(SuiteStatus::Done),
+        IncomingMessage::GetStatus => OutgoingMessage::Status(SuiteStatus::Ready),
         IncomingMessage::Benchmark(info) => {
             let result = match info {
                 benchmark_common::BenchmarkInfo::AESDataSet(bench_type, id) => {
                     if id > datasets::aes::DATASETS.len() {
-                        return Some(OutgoingMessage::Error(format!(
-                            "No aes dataset with id {}",
-                            id
-                        )));
+                        return OutgoingMessage::Error(format!("No aes dataset with id {}", id));
                     }
                     let dataset = &datasets::aes::DATASETS[id];
 
@@ -50,10 +45,7 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
                 }
                 benchmark_common::BenchmarkInfo::RNGDataSet(id) => {
                     if id > datasets::rng::DATASETS.len() {
-                        return Some(OutgoingMessage::Error(format!(
-                            "No rng dataset with id {}",
-                            id
-                        )));
+                        return OutgoingMessage::Error(format!("No rng dataset with id {}", id));
                     }
                     let dataset = &datasets::rng::DATASETS[id];
 
@@ -61,10 +53,7 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
                 }
                 benchmark_common::BenchmarkInfo::HashDataSet(bench_type, id) => {
                     if id > datasets::hashing::DATASETS.len() {
-                        return Some(OutgoingMessage::Error(format!(
-                            "No rng dataset with id {}",
-                            id
-                        )));
+                        return OutgoingMessage::Error(format!("No rng dataset with id {}", id));
                     }
                     let dataset = &datasets::hashing::DATASETS[id];
 
@@ -76,7 +65,7 @@ pub fn run_cmd(cmd: IncomingMessage) -> Option<OutgoingMessage> {
                 benchmark_common::BenchmarkInfo::MicroBenchmarks => micro_benchmarks(),
             };
 
-            Some(OutgoingMessage::BenchmarkResults(result))
+            OutgoingMessage::BenchmarkResults(result)
         }
     }
 }

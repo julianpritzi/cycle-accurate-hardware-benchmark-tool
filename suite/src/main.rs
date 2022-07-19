@@ -23,9 +23,7 @@ fn main() {
     runtime::send_message(&OutgoingMessage::Status(SuiteStatus::Ready));
 
     loop {
-        if let Some(reply) = cmd::run_cmd(runtime::read_message()) {
-            runtime::send_message(&reply);
-        }
+        runtime::send_message(&cmd::run_cmd(runtime::read_message()));
     }
 }
 

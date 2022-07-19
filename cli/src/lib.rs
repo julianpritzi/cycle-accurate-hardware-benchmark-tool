@@ -16,12 +16,13 @@ use tty::{SerialConnection, SuiteConnection};
 ///
 /// * `tty` - path to the tty used to communicate with the suite
 /// * `input_file` - path to the file containing the messages that should be sent
-pub fn benchmark_raw_file(tty: &OsString, input_file: PathBuf) {
+pub fn benchmark_raw_file(tty: &OsString, input_file: PathBuf) -> String {
     let mut suite =
         SuiteConnection::new(SerialConnection::new(tty).expect("Failed to connect to serial"))
             .expect("Failed to establish valid connection with suite");
 
     let input_msg = fs::read_to_string(&input_file).expect("Failed to read input file");
+    let mut output_msg = String::new();
     for (line_num, line) in input_msg.lines().enumerate() {
         let line = line.trim();
 
@@ -42,28 +43,33 @@ pub fn benchmark_raw_file(tty: &OsString, input_file: PathBuf) {
         }
 
         suite.send_message(&msg);
+        match suite.read_message() {
+            Ok(msg) => {
+                output_msg.push_str(&format!("{msg:#?}\n"));
+            }
+            Err(_) => {
+                output_msg.push_str(&format!("-- Connection lost --\n"));
+                return output_msg;
+            }
+        }
     }
-    suite.send_message(&OutgoingMessage::Done);
 
-    let mut output_msg = String::new();
     loop {
+        suite.send_message(&OutgoingMessage::Done);
         match suite.read_message() {
             Ok(msg) => {
                 output_msg.push_str(&format!("{msg:#?}\n"));
 
                 if matches!(msg, IncomingMessage::Status(SuiteStatus::Done)) {
-                    break;
+                    return output_msg;
                 }
             }
             Err(_) => {
-                println!("Connection closed.");
-                break;
+                output_msg.push_str(&format!("-- Connection lost --\n"));
+                return output_msg;
             }
         }
     }
-
-    fs::write(input_file.with_extension("result"), output_msg)
-        .expect("Failed to write output file");
 }
 
 /// Benchmark the suite using the file provided.
