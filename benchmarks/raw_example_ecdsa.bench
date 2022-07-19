@@ -1,6 +1,0 @@
-# This file contains serializations of messages that should be sent to the suite.
-# For more information, like a description of all messages, check the common crate.
-
-# This does not finish in verilator because the OTBN HWIP is always "busy"
-# TODO: Test if everything works on FPGA
-# {"Benchmark":["ExampleECDSA",3]}

@@ -16,10 +16,12 @@ use tty::{SerialConnection, SuiteConnection};
 ///
 /// * `tty` - path to the tty used to communicate with the suite
 /// * `input_file` - path to the file containing the messages that should be sent
-pub fn benchmark_raw_file(tty: &OsString, input_file: PathBuf) -> String {
-    let mut suite =
-        SuiteConnection::new(SerialConnection::new(tty).expect("Failed to connect to serial"))
-            .expect("Failed to establish valid connection with suite");
+pub fn benchmark_raw_file(tty: &OsString, input_file: PathBuf, verbose: bool) -> String {
+    let mut suite = SuiteConnection::new(
+        SerialConnection::new(tty).expect("Failed to connect to serial"),
+        verbose,
+    )
+    .expect("Failed to establish valid connection with suite");
 
     let input_msg = fs::read_to_string(&input_file).expect("Failed to read input file");
     let mut output_msg = String::new();

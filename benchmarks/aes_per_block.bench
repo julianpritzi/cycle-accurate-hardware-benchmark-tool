@@ -1,0 +1,10 @@
+# This file contains serializations of messages that should be sent to the suite.
+# For more information, like a description of all messages, check the common crate.
+
+{"Benchmark":{"AESDataSet":["EncryptionPerBlock",0]}}
+{"Benchmark":{"AESDataSet":["EncryptionPerBlock",1]}}
+{"Benchmark":{"AESDataSet":["EncryptionPerBlock",2]}}
+
+{"Benchmark":{"AESDataSet":["DecryptionPerBlock",0]}}
+{"Benchmark":{"AESDataSet":["DecryptionPerBlock",1]}}
+{"Benchmark":{"AESDataSet":["DecryptionPerBlock",2]}}

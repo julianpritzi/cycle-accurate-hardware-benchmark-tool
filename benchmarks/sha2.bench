@@ -1,4 +1,5 @@
 # This file contains serializations of messages that should be sent to the suite.
 # For more information, like a description of all messages, check the common crate.
 
-{"Benchmark":["ExampleAES256",3]}
+{"Benchmark":{"HashDataSet":["SHA2",0]}}
+{"Benchmark":{"HashDataSet":["SHA2",1]}}
