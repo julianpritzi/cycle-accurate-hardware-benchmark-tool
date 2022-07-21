@@ -101,7 +101,7 @@ pub mod aes {
             key_length: AESKeyLength::Aes256,
             mode: MODE_ECB,
             plaintext: &PLAINTEXT_2,
-            ciphertext: &CIPHERTEXT_3,
+            ciphertext: &CIPHERTEXT_5,
         },
         AesData {
             key_share0: &KEY_2,
@@ -109,7 +109,7 @@ pub mod aes {
             key_length: AESKeyLength::Aes256,
             mode: MODE_CFB,
             plaintext: &PLAINTEXT_2,
-            ciphertext: &CIPHERTEXT_3,
+            ciphertext: &CIPHERTEXT_6,
         },
         AesData {
             key_share0: &KEY_2,
@@ -117,7 +117,7 @@ pub mod aes {
             key_length: AESKeyLength::Aes256,
             mode: MODE_OFB,
             plaintext: &PLAINTEXT_2,
-            ciphertext: &CIPHERTEXT_3,
+            ciphertext: &CIPHERTEXT_7,
         },
         AesData {
             key_share0: &KEY_2,
@@ -125,7 +125,7 @@ pub mod aes {
             key_length: AESKeyLength::Aes256,
             mode: MODE_CBC1,
             plaintext: &PLAINTEXT_2,
-            ciphertext: &CIPHERTEXT_3,
+            ciphertext: &CIPHERTEXT_8,
         },
         AesData {
             key_share0: &KEY_2,
@@ -133,7 +133,7 @@ pub mod aes {
             key_length: AESKeyLength::Aes192,
             mode: MODE_CTR2,
             plaintext: &PLAINTEXT_2,
-            ciphertext: &CIPHERTEXT_3,
+            ciphertext: &CIPHERTEXT_4,
         },
     ];
 
@@ -197,7 +197,7 @@ pub mod aes {
     /// with the following configuration:
     /// - key_1 & zero_key
     /// - aes256
-    /// - mode_1
+    /// - ctr1
     /// - plaintext_1
     const CIPHERTEXT_1: [u128; 4] = [
         0xfd0dcbcab0d253425800853d7c871aa4,
@@ -210,7 +210,7 @@ pub mod aes {
     /// with the following configuration:
     /// - key_2 & zero_key
     /// - aes256
-    /// - mode_2
+    /// - ctr2
     /// - plaintext_2
     const CIPHERTEXT_2: [u128; 5] = [
         0x7b436a4b7d3f339be5e7177bd8921e2f,
@@ -220,12 +220,11 @@ pub mod aes {
         0x9255ff0a9b062e8759bd262ee56526bd,
     ];
 
-    /// TODO: Precompute using openssl crate
     /// Precomputed
     /// with the following configuration:
     /// - key_e & zero_key
     /// - aes128
-    /// - mode_2
+    /// - ctr2
     /// - plaintext_2
     const CIPHERTEXT_3: [u128; 5] = [
         216204826054460043807303989113819840591,
@@ -233,6 +232,71 @@ pub mod aes {
         34556971530398279208475813519663588863,
         131440332510047834340741114835849683819,
         70932358512670535611769148021203691653,
+    ];
+    /// Precomputed
+    /// with the following configuration:
+    /// - key_e & zero_key
+    /// - aes192
+    /// - ctr2
+    /// - plaintext_2
+    const CIPHERTEXT_4: [u128; 5] = [
+        217124872965427032111235906799549993985,
+        238935646447262359698734307095773424776,
+        140896496096171119997315801250754282390,
+        202585665598863883984489641497916996133,
+        183667575662584573474182805892206702269,
+    ];
+    /// Precomputed
+    /// with the following configuration:
+    /// - key_e & zero_key
+    /// - aes256
+    /// - ecb
+    /// - plaintext_2
+    const CIPHERTEXT_5: [u128; 5] = [
+        312881567662951297988459310358802299683,
+        127769495783133271835911535449375279776,
+        281650435726606268209442576283134796070,
+        187272245625691807913970763121489298736,
+        203668696361171042331528510853529494330,
+    ];
+    /// Precomputed
+    /// with the following configuration:
+    /// - key_e & zero_key
+    /// - aes256
+    /// - cfb
+    /// - plaintext_2
+    const CIPHERTEXT_6: [u128; 5] = [
+        247263864820301126010464458902268062751,
+        13715359650231564232998947340216015619,
+        101754532249103459614744459246128725857,
+        23311569570637031303831865944879030956,
+        79328239420179180907563084815651920889,
+    ];
+    /// Precomputed
+    /// with the following configuration:
+    /// - key_e & zero_key
+    /// - aes256
+    /// - ofb
+    /// - plaintext_2
+    const CIPHERTEXT_7: [u128; 5] = [
+        3497295795174984230591242788273387179,
+        240950620443523203283963011915190716935,
+        305405761419126461944505975804777024786,
+        13331180736475515383086604271229372535,
+        340043335856774321444546083695732149829,
+    ];
+    /// Precomputed
+    /// with the following configuration:
+    /// - key_e & zero_key
+    /// - aes256
+    /// - cbc
+    /// - plaintext_2
+    const CIPHERTEXT_8: [u128; 5] = [
+        339773291626259472341853817766198240059,
+        186908221729795732096918413988387157990,
+        1125621449319946647738674627939392603,
+        194305628008676668139400069221999492145,
+        230969297365524457541312554310927889077,
     ];
 }
 

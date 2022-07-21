@@ -61,11 +61,10 @@ pub fn benchmark_raw_file(tty: &OsString, input_file: PathBuf, verbose: bool) ->
         suite.send_message(&OutgoingMessage::Done);
         match suite.read_message() {
             Ok(msg) => {
-                output_msg.push_str(&format!("{msg:#?}\n"));
-
                 if matches!(msg, IncomingMessage::Status(SuiteStatus::Done)) {
                     return output_msg;
                 }
+                output_msg.push_str(&format!("{msg:#?}\n"));
             }
             Err(_) => {
                 output_msg.push_str(&format!("-- Connection lost --\n"));
