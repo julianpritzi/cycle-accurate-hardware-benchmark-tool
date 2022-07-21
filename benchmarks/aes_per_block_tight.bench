@@ -1,10 +1,17 @@
-# This file contains serializations of messages that should be sent to the suite.
-# For more information, like a description of all messages, check the common crate.
+# Benchmark to determine the block computation cycles,
+# when using tighter measurements.
+# All benchmarks are run using CTR mode on 5 x 128bit blocks of data
 
-{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":true},0]}}
+# 256bit key
 {"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":true},1]}}
+# 192bit key
+{"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":true},7]}}
+# 128bit key
 {"Benchmark":{"AESDataSet":[{"EncryptionPerBlock":true},2]}}
 
-{"Benchmark":{"AESDataSet":[{"DecryptionPerBlock":true},0]}}
+# 256bit key
 {"Benchmark":{"AESDataSet":[{"DecryptionPerBlock":true},1]}}
+# 192bit key
 {"Benchmark":{"AESDataSet":[{"DecryptionPerBlock":true},2]}}
+# 128bit key
+{"Benchmark":{"AESDataSet":[{"DecryptionPerBlock":true},7]}}

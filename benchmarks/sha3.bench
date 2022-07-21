@@ -1,7 +1,9 @@
-# This file contains serializations of messages that should be sent to the suite.
-# For more information, like a description of all messages, check the common crate.
+# Benchmark to determine hashing cycles of the SHA3 module
 
+# 2048bits data, api conform
 {"Benchmark":{"HashDataSet":[{"SHA3":false},0]}}
+# 32bits data, api conform
 {"Benchmark":{"HashDataSet":[{"SHA3":false},1]}}
 
+# 2048bits data, tight
 {"Benchmark":{"HashDataSet":[{"SHA3":true},0]}}

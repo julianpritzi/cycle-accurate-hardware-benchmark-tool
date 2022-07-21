@@ -29,6 +29,7 @@ pub fn benchmark_raw_file(tty: &OsString, input_file: PathBuf, verbose: bool) ->
         let line = line.trim();
 
         if line.starts_with('#') || line.is_empty() {
+            output_msg.push_str(&format!("{line}\n"));
             continue;
         }
 

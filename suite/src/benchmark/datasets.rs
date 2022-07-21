@@ -70,12 +70,12 @@ pub mod aes {
         pub ciphertext: &'static [u128],
     }
 
-    pub const DATASETS: [AesData; 3] = [
+    pub const DATASETS: [AesData; 8] = [
         AesData {
             key_share0: &KEY_1,
             key_share1: &ZERO_KEY,
             key_length: AESKeyLength::Aes256,
-            mode: MODE_1,
+            mode: MODE_CTR1,
             plaintext: &PLAINTEXT_1,
             ciphertext: &CIPHERTEXT_1,
         },
@@ -83,7 +83,7 @@ pub mod aes {
             key_share0: &KEY_2,
             key_share1: &ZERO_KEY,
             key_length: AESKeyLength::Aes256,
-            mode: MODE_2,
+            mode: MODE_CTR2,
             plaintext: &PLAINTEXT_2,
             ciphertext: &CIPHERTEXT_2,
         },
@@ -91,7 +91,47 @@ pub mod aes {
             key_share0: &KEY_3,
             key_share1: &ZERO_KEY,
             key_length: AESKeyLength::Aes128,
-            mode: MODE_2,
+            mode: MODE_CTR2,
+            plaintext: &PLAINTEXT_2,
+            ciphertext: &CIPHERTEXT_3,
+        },
+        AesData {
+            key_share0: &KEY_2,
+            key_share1: &ZERO_KEY,
+            key_length: AESKeyLength::Aes256,
+            mode: MODE_ECB,
+            plaintext: &PLAINTEXT_2,
+            ciphertext: &CIPHERTEXT_3,
+        },
+        AesData {
+            key_share0: &KEY_2,
+            key_share1: &ZERO_KEY,
+            key_length: AESKeyLength::Aes256,
+            mode: MODE_CFB,
+            plaintext: &PLAINTEXT_2,
+            ciphertext: &CIPHERTEXT_3,
+        },
+        AesData {
+            key_share0: &KEY_2,
+            key_share1: &ZERO_KEY,
+            key_length: AESKeyLength::Aes256,
+            mode: MODE_OFB,
+            plaintext: &PLAINTEXT_2,
+            ciphertext: &CIPHERTEXT_3,
+        },
+        AesData {
+            key_share0: &KEY_2,
+            key_share1: &ZERO_KEY,
+            key_length: AESKeyLength::Aes256,
+            mode: MODE_CBC1,
+            plaintext: &PLAINTEXT_2,
+            ciphertext: &CIPHERTEXT_3,
+        },
+        AesData {
+            key_share0: &KEY_2,
+            key_share1: &ZERO_KEY,
+            key_length: AESKeyLength::Aes192,
+            mode: MODE_CTR2,
             plaintext: &PLAINTEXT_2,
             ciphertext: &CIPHERTEXT_3,
         },
@@ -128,10 +168,16 @@ pub mod aes {
         0x0000_0000,
         0x0000_0000,
     ];
-    const MODE_1: AESMode = AESMode::CTR {
+    const MODE_CTR1: AESMode = AESMode::CTR {
         iv: 0x0000_1111_2222_3333_4444_5555_6666_7777u128,
     };
-    const MODE_2: AESMode = AESMode::CTR {
+    const MODE_CTR2: AESMode = AESMode::CTR {
+        iv: 0xfb12_60c5_8b69_93a7_b8c7_7c6e_464a_a903u128,
+    };
+    const MODE_ECB: AESMode = AESMode::ECB;
+    const MODE_CFB: AESMode = AESMode::CFB;
+    const MODE_OFB: AESMode = AESMode::OFB;
+    const MODE_CBC1: AESMode = AESMode::CBC {
         iv: 0xfb12_60c5_8b69_93a7_b8c7_7c6e_464a_a903u128,
     };
     const PLAINTEXT_1: [u128; 4] = [
