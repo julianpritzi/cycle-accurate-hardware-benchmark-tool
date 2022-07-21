@@ -178,7 +178,7 @@ pub fn sha3_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
         sha3_module.read_digest(&mut output1);
         let cycle4 = get_cycle();
 
-        assert_eq!(&output1, data_set.sha2_digest);
+        assert_eq!(&output1, data_set.sha3_digest);
 
         // Measure only the fifo fillage
         sha3_module.init_hashing();
@@ -191,7 +191,7 @@ pub fn sha3_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
         sha3_module.wait_for_completion();
         sha3_module.read_digest(&mut output2);
 
-        assert_eq!(&output2, data_set.sha2_digest);
+        assert_eq!(&output2, data_set.sha3_digest);
 
         Some(BenchmarkResult::SHA3Total {
             initialization: cycle2 - cycle1,
