@@ -48,7 +48,15 @@ pub fn sha2_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
         let cycle1 = get_cycle();
         sha2_module.init_hashing();
         let cycle2 = get_cycle();
-        sha2_module.write_input(data_set.data);
+        for value in data_set.data {
+            while !sha2_module.input_ready() {
+                core::hint::spin_loop()
+            }
+
+            unsafe {
+                sha2_module.write_input(*value);
+            }
+        }
         sha2_module.wait_for_completion();
         let cycle3 = get_cycle();
         sha2_module.read_digest(&mut output);
@@ -60,6 +68,54 @@ pub fn sha2_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
             initialization: cycle2 - cycle1,
             computation: cycle3 - cycle2,
             reading_output: cycle4 - cycle3,
+            fifo_depth: None,
+        })
+    } else {
+        None
+    }
+}
+
+/// Performs a sha2 benchmark using the provided dataset
+pub fn sha2_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
+    if let Some(sha2_module) = platform::current().get_sha2_module() {
+        let mut output1 = [0u32; 8];
+        let mut output2 = [0u32; 8];
+        let mut fifo_fillage = vec![0; data_set.data.len()];
+
+        // Measure the cycles for the operations
+        let cycle1 = get_cycle();
+        sha2_module.init_hashing();
+        let cycle2 = get_cycle();
+        for value in data_set.data {
+            unsafe {
+                sha2_module.write_input(*value);
+            }
+        }
+        sha2_module.wait_for_completion();
+        let cycle3 = get_cycle();
+        sha2_module.read_digest(&mut output1);
+        let cycle4 = get_cycle();
+
+        assert_eq!(&output1, data_set.sha2_digest);
+
+        // Measure only the fifo fillage
+        sha2_module.init_hashing();
+        for i in 0..fifo_fillage.len() {
+            fifo_fillage[i] = sha2_module.get_fifo_elements();
+            unsafe {
+                sha2_module.write_input(data_set.data[i]);
+            }
+        }
+        sha2_module.wait_for_completion();
+        sha2_module.read_digest(&mut output2);
+
+        assert_eq!(&output2, data_set.sha2_digest);
+
+        Some(BenchmarkResult::SHA2Total {
+            initialization: cycle2 - cycle1,
+            computation: cycle3 - cycle2,
+            reading_output: cycle4 - cycle3,
+            fifo_depth: Some(fifo_fillage),
         })
     } else {
         None
@@ -74,7 +130,15 @@ pub fn sha3_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
         let cycle1 = get_cycle();
         sha3_module.init_hashing();
         let cycle2 = get_cycle();
-        sha3_module.write_input(data_set.data);
+        for value in data_set.data {
+            while !sha3_module.input_ready() {
+                core::hint::spin_loop()
+            }
+
+            unsafe {
+                sha3_module.write_input(*value);
+            }
+        }
         sha3_module.wait_for_completion();
         let cycle3 = get_cycle();
         sha3_module.read_digest(&mut output);
@@ -86,6 +150,54 @@ pub fn sha3_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
             initialization: cycle2 - cycle1,
             computation: cycle3 - cycle2,
             reading_output: cycle4 - cycle3,
+            fifo_depth: None,
+        })
+    } else {
+        None
+    }
+}
+
+/// Performs a sha3 benchmark using the provided dataset
+pub fn sha3_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
+    if let Some(sha3_module) = platform::current().get_sha3_module() {
+        let mut output1 = [0u32; 8];
+        let mut output2 = [0u32; 8];
+        let mut fifo_fillage = vec![0; data_set.data.len()];
+
+        // Measure the cycles for the operations
+        let cycle1 = get_cycle();
+        sha3_module.init_hashing();
+        let cycle2 = get_cycle();
+        for value in data_set.data {
+            unsafe {
+                sha3_module.write_input(*value);
+            }
+        }
+        sha3_module.wait_for_completion();
+        let cycle3 = get_cycle();
+        sha3_module.read_digest(&mut output1);
+        let cycle4 = get_cycle();
+
+        assert_eq!(&output1, data_set.sha2_digest);
+
+        // Measure only the fifo fillage
+        sha3_module.init_hashing();
+        for i in 0..fifo_fillage.len() {
+            fifo_fillage[i] = sha3_module.get_fifo_elements();
+            unsafe {
+                sha3_module.write_input(data_set.data[i]);
+            }
+        }
+        sha3_module.wait_for_completion();
+        sha3_module.read_digest(&mut output2);
+
+        assert_eq!(&output2, data_set.sha2_digest);
+
+        Some(BenchmarkResult::SHA3Total {
+            initialization: cycle2 - cycle1,
+            computation: cycle3 - cycle2,
+            reading_output: cycle4 - cycle3,
+            fifo_depth: Some(fifo_fillage),
         })
     } else {
         None

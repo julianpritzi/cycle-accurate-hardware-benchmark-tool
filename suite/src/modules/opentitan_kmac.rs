@@ -3,6 +3,8 @@
 use crate::modules::{HashingModule, Module};
 use bitflags::bitflags;
 
+use self::status_reg::{FIFO_DEPTH_MASK, FIFO_DEPTH_OFFSET};
+
 bitflags! {
     /// Abstract representation of the config registers flags.
     struct KmacCFG: u32 {
@@ -34,6 +36,11 @@ const KMAC_CFG_OFFSET: usize = 0x14;
 const KMAC_CMD_OFFSET: usize = 0x18;
 /// Offset of the status register
 const KMAC_STATUS_OFFSET: usize = 0x1c;
+/// Information encoded in the status register
+mod status_reg {
+    pub const FIFO_DEPTH_OFFSET: u32 = 8;
+    pub const FIFO_DEPTH_MASK: u32 = 0b11111;
+}
 /// Offset of the digest register
 ///
 /// Digest can be used like an [u32; 8] residing at this offset
@@ -108,33 +115,32 @@ impl Module for OpentitanKMAC {
 
 impl HashingModule for OpentitanKMAC {
     fn init_hashing(&self) {
-        unsafe { self._config_reg().write_volatile(0) }
+        unsafe {
+            self._config_reg().write_volatile(0);
+            self._command_reg().write_volatile(KmacCMD::START.bits());
+        }
     }
 
-    fn write_input(&self, data: &[u32]) {
-        unsafe {
-            self._command_reg().write_volatile(KmacCMD::START.bits());
+    unsafe fn write_input(&self, data: u32) {
+        self._msg_reg().write_volatile(data);
+    }
 
-            for value in data {
-                while KmacSTATUS::from_bits_unchecked(self._status_reg().read_volatile())
-                    .contains(KmacSTATUS::FIFO_FULL)
-                {
-                    core::hint::spin_loop()
-                }
+    fn input_ready(&self) -> bool {
+        unsafe { self._status_reg().read_volatile() & KmacSTATUS::FIFO_FULL.bits() == 0 }
+    }
 
-                self._msg_reg().write_volatile(*value);
-            }
-        }
+    fn get_fifo_elements(&self) -> u32 {
+        unsafe { (self._status_reg().read_volatile() >> FIFO_DEPTH_OFFSET) & FIFO_DEPTH_MASK }
     }
 
     fn wait_for_completion(&self) {
         unsafe {
             self._command_reg().write_volatile(KmacCMD::PROCESS.bits());
 
-            while !KmacSTATUS::from_bits_unchecked(self._status_reg().read_volatile())
-                .contains(KmacSTATUS::SHA3_SQUEEZE)
-            {
-                core::hint::spin_loop()
+            while self._status_reg().read_volatile() & KmacSTATUS::SHA3_SQUEEZE.bits() == 0 {
+                {
+                    core::hint::spin_loop()
+                }
             }
         }
     }

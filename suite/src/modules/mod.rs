@@ -56,14 +56,18 @@ pub trait HashingModule: Module {
     /// Setup the module for hashing
     fn init_hashing(&self);
 
-    /// Input data into the module, over which the sha hash should be computed
-    /// This function accepts &[u32] for performance reasons.
-    /// If the data is present as &[u8] try transmuting it to &[u32].
+    /// Input a single u32
     ///
-    /// # Arguments
+    /// # Safety
     ///
-    /// * `data` - the data to compute the hash of
-    fn write_input(&self, data: &[u32]);
+    /// - input has to be ready
+    unsafe fn write_input(&self, data: u32);
+
+    /// Return true if input is ready
+    fn input_ready(&self) -> bool;
+
+    /// Return the number of elements in the internal fifo
+    fn get_fifo_elements(&self) -> u32;
 
     /// Blocks until the module completed computation
     fn wait_for_completion(&self);
@@ -200,7 +204,7 @@ pub mod empty {
             unreachable!()
         }
 
-        fn write_input(&self, _: &[u32]) {
+        unsafe fn write_input(&self, _: u32) {
             unreachable!()
         }
 
@@ -209,6 +213,14 @@ pub mod empty {
         }
 
         fn read_digest(&self, _: &mut [u32; 8]) {
+            unreachable!()
+        }
+
+        fn input_ready(&self) -> bool {
+            unreachable!()
+        }
+
+        fn get_fifo_elements(&self) -> u32 {
             unreachable!()
         }
     }

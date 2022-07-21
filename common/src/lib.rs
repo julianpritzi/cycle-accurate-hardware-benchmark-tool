@@ -63,8 +63,10 @@ pub enum AESBenchmarkType {
 /// Represents all the possible types of benchmarks for the hashing module
 #[derive(Debug, Serialize, Deserialize)]
 pub enum HashBenchmarkType {
-    SHA2,
-    SHA3,
+    // Perform a sha2 benchmark, if true use tighter waiting for more accurate results
+    SHA2(bool),
+    // Perform a sha2 benchmark, if true use tighter waiting for more accurate results
+    SHA3(bool),
 }
 
 /// Messages sent from the Suite to the CLI
@@ -90,11 +92,13 @@ pub enum BenchmarkResult {
         initialization: u64,
         computation: u64,
         reading_output: u64,
+        fifo_depth: Option<Vec<u32>>,
     },
     SHA3Total {
         initialization: u64,
         computation: u64,
         reading_output: u64,
+        fifo_depth: Option<Vec<u32>>,
     },
     RNGTotalSeeded {
         seeded_initialization: u64,
