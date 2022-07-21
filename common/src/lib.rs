@@ -90,13 +90,15 @@ pub enum _SuiteToCliMessage {
 pub enum BenchmarkResult {
     SHA2Total {
         initialization: u64,
-        computation: u64,
+        input_data: u64,
+        wait_for_computation: u64,
         reading_output: u64,
         fifo_depth: Option<Vec<u32>>,
     },
     SHA3Total {
         initialization: u64,
-        computation: u64,
+        input_data: u64,
+        wait_for_computation: u64,
         reading_output: u64,
         fifo_depth: Option<Vec<u32>>,
     },

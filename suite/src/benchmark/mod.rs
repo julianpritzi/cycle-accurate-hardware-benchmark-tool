@@ -57,17 +57,19 @@ pub fn sha2_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
                 sha2_module.write_input(*value);
             }
         }
-        sha2_module.wait_for_completion();
         let cycle3 = get_cycle();
-        sha2_module.read_digest(&mut output);
+        sha2_module.wait_for_completion();
         let cycle4 = get_cycle();
+        sha2_module.read_digest(&mut output);
+        let cycle5 = get_cycle();
 
         assert_eq!(&output, data_set.sha2_digest);
 
         Some(BenchmarkResult::SHA2Total {
             initialization: cycle2 - cycle1,
-            computation: cycle3 - cycle2,
-            reading_output: cycle4 - cycle3,
+            input_data: cycle3 - cycle2,
+            wait_for_computation: cycle4 - cycle3,
+            reading_output: cycle5 - cycle4,
             fifo_depth: None,
         })
     } else {
@@ -91,10 +93,11 @@ pub fn sha2_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
                 sha2_module.write_input(*value);
             }
         }
-        sha2_module.wait_for_completion();
         let cycle3 = get_cycle();
-        sha2_module.read_digest(&mut output1);
+        sha2_module.wait_for_completion();
         let cycle4 = get_cycle();
+        sha2_module.read_digest(&mut output1);
+        let cycle5 = get_cycle();
 
         assert_eq!(&output1, data_set.sha2_digest);
 
@@ -113,8 +116,9 @@ pub fn sha2_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
 
         Some(BenchmarkResult::SHA2Total {
             initialization: cycle2 - cycle1,
-            computation: cycle3 - cycle2,
-            reading_output: cycle4 - cycle3,
+            input_data: cycle3 - cycle2,
+            wait_for_computation: cycle4 - cycle3,
+            reading_output: cycle5 - cycle4,
             fifo_depth: Some(fifo_fillage),
         })
     } else {
@@ -139,17 +143,19 @@ pub fn sha3_benchmark_total(data_set: &HashingData) -> Option<BenchmarkResult> {
                 sha3_module.write_input(*value);
             }
         }
-        sha3_module.wait_for_completion();
         let cycle3 = get_cycle();
-        sha3_module.read_digest(&mut output);
+        sha3_module.wait_for_completion();
         let cycle4 = get_cycle();
+        sha3_module.read_digest(&mut output);
+        let cycle5 = get_cycle();
 
         assert_eq!(&output, data_set.sha3_digest);
 
         Some(BenchmarkResult::SHA3Total {
             initialization: cycle2 - cycle1,
-            computation: cycle3 - cycle2,
-            reading_output: cycle4 - cycle3,
+            input_data: cycle3 - cycle2,
+            wait_for_computation: cycle4 - cycle3,
+            reading_output: cycle5 - cycle4,
             fifo_depth: None,
         })
     } else {
@@ -173,10 +179,11 @@ pub fn sha3_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
                 sha3_module.write_input(*value);
             }
         }
-        sha3_module.wait_for_completion();
         let cycle3 = get_cycle();
-        sha3_module.read_digest(&mut output1);
+        sha3_module.wait_for_completion();
         let cycle4 = get_cycle();
+        sha3_module.read_digest(&mut output1);
+        let cycle5 = get_cycle();
 
         assert_eq!(&output1, data_set.sha3_digest);
 
@@ -195,8 +202,9 @@ pub fn sha3_benchmark_tight(data_set: &HashingData) -> Option<BenchmarkResult> {
 
         Some(BenchmarkResult::SHA3Total {
             initialization: cycle2 - cycle1,
-            computation: cycle3 - cycle2,
-            reading_output: cycle4 - cycle3,
+            input_data: cycle3 - cycle2,
+            wait_for_computation: cycle4 - cycle3,
+            reading_output: cycle5 - cycle4,
             fifo_depth: Some(fifo_fillage),
         })
     } else {
