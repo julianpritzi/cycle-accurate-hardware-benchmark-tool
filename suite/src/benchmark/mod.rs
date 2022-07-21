@@ -349,6 +349,7 @@ pub fn rng_benchmark_total_seeded(data_set: &RngData) -> Option<BenchmarkResult>
         }
 
         assert_eq!(random_numbers1, data_set.values);
+        assert_eq!(random_numbers2, data_set.values);
 
         Some(BenchmarkResult::RNGTotalSeeded {
             seeded_initialization: seeded_init_e - seeded_init_s,
