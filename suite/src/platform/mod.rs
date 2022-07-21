@@ -31,6 +31,7 @@ pub mod module_types {
     pub type SHA3Module = earlgrey::opentitan_kmac::OpentitanKMAC;
     pub type AESModule = earlgrey::opentitan_aes::OpentitanAES;
     pub type RNGModule = earlgrey::opentitan_csrng::OpentitanCSRNG;
+    pub type ECDSAModule = earlgrey::opentitan_otbn::OpentitanOTBN;
 }
 
 /// Returns the platform the suite was compiled for.
@@ -86,6 +87,14 @@ pub trait Platform {
     ///
     /// Returned type if present is guaranteed to implement the RNGModule trait
     fn get_rng_module(&self) -> Option<&'static mut RNGModule> {
+        None
+    }
+
+    /// Returns the opentitan ecdsa module if one is present.
+    ///
+    /// Returned type if present is guaranteed to implement the ECDSAModule trait
+    /// Todo: implement the trait
+    fn get_ecdsa_module(&self) -> Option<&'static mut ECDSAModule> {
         None
     }
 

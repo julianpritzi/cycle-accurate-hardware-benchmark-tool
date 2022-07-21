@@ -22,6 +22,9 @@ extern crate alloc;
 fn main() {
     runtime::send_message(&OutgoingMessage::Status(SuiteStatus::Ready));
 
+    let otbn = platform::current().get_ecdsa_module().unwrap();
+    otbn.test();
+
     loop {
         runtime::send_message(&cmd::run_cmd(runtime::read_message()));
     }

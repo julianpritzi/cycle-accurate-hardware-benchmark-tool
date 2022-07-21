@@ -12,6 +12,8 @@ pub mod opentitan_csrng;
 pub mod opentitan_hmac;
 #[path = "../../modules/opentitan_kmac.rs"]
 pub mod opentitan_kmac;
+#[path = "../../modules/opentitan_otbn.rs"]
+pub mod opentitan_otbn;
 #[path = "../../modules/opentitan_uart.rs"]
 pub mod opentitan_uart;
 
@@ -38,6 +40,8 @@ static mut AES: opentitan_aes::OpentitanAES =
     unsafe { opentitan_aes::OpentitanAES::new(0x4110_0000 as *mut u8) };
 static mut CSRNG: opentitan_csrng::OpentitanCSRNG =
     unsafe { opentitan_csrng::OpentitanCSRNG::new(0x41150000 as *mut u8) };
+static mut OTBN: opentitan_otbn::OpentitanOTBN =
+    unsafe { opentitan_otbn::OpentitanOTBN::new(0x411D0000 as *mut u8) };
 
 /// EarlGrey platform according to the Opentitan specification:
 ///
@@ -82,5 +86,9 @@ impl Platform for EarlGreyPlatform {
 
     fn get_sha3_module(&self) -> Option<&'static mut self::opentitan_kmac::OpentitanKMAC> {
         unsafe { Some(&mut KMAC) }
+    }
+
+    fn get_ecdsa_module(&self) -> Option<&'static mut opentitan_otbn::OpentitanOTBN> {
+        unsafe { Some(&mut OTBN) }
     }
 }
